@@ -34,7 +34,7 @@ Server-rendered Blade app. No API routes exist — all routes in `routes/web.php
 
 **Middleware:** `role:admin` / `role:customer` uses custom `EnsureRole` class (registered as `role` alias in `bootstrap/app.php`). Supports variadic roles: `role:admin,customer`.
 
-**Cart:** Session-based (not database). Works for guests and logged-in users. Stored in `session('cart')` as `[product_id => quantity]`.
+**Cart:** localStorage-based (client-side). No session or DB storage. Cart data lives in `localStorage` as `[{id, name, price, image, qty}]`. Managed via `resources/js/cart.js` (`CartStorage` API). Works for guests and logged-in users without any backend state.
 
 ## Key business rules (PRD — agents will get these wrong)
 

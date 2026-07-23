@@ -14,6 +14,14 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
+    public function checkout()
+    {
+        $user = Auth::user();
+        $minDate = now()->addDay()->format('Y-m-d');
+
+        return view('customer.order-create', compact('user', 'minDate'));
+    }
+
     public function index()
     {
         $orders = Order::where('user_id', Auth::id())
@@ -127,77 +135,104 @@ class OrderController extends Controller
         $leadDays = (int) env('MIN_ORDER_LEAD_DAYS', 1);
 
         $validated = $request->validate([
-            'product_id' => ['required', 'exists:products,id'],
+            'cart_payload' => ['required', 'string'],
             'orderer_name' => ['required', 'string', 'max:255'],
             'orderer_phone' => ['required', 'string', 'max:20', 'regex:/^08[0-9]{8,11}$/'],
             'needed_date' => ['required', 'date', 'after:' . now()->addDays($leadDays - 1)->format('Y-m-d')],
             'pickup_method' => ['required', 'in:self_pickup,delivery'],
             'delivery_address' => ['required_if:pickup_method,delivery', 'nullable', 'string'],
             'special_note' => ['nullable', 'string', 'max:500'],
-            'quantity' => ['required', 'integer', 'min:1'],
             'payment_proof' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
-        $product = Product::lockForUpdate()->find($validated['product_id']);
-
-        if (!$product || !$product->is_active) {
-            return back()->withErrors(['product_id' => 'Produk tidak tersedia.'])->withInput();
+        $cartItems = json_decode($validated['cart_payload'], true);
+        if (!is_array($cartItems) || empty($cartItems)) {
+            return back()->withInput()->with('error', 'Keranjang belanja kosong atau data tidak valid.');
         }
-
-        $quantity = (int) $validated['quantity'];
-
-        if ($product->stock < $quantity) {
-            return back()->withErrors(['quantity' => 'Stok tidak mencukupi. Sisa stok: ' . $product->stock])->withInput();
-        }
-
-        $priceSnapshot = $product->price;
-        $subtotal = $priceSnapshot * $quantity;
-        $totalPrice = $subtotal;
-
-        $path = $request->file('payment_proof')->store('payment-proofs', 'public');
 
         $orderCode = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(3));
+        $path = $request->file('payment_proof')->store('payment-proofs', 'public');
 
         DB::beginTransaction();
 
         try {
+            $totalPrice = 0;
+            $orderItems = [];
+
+            foreach ($cartItems as $item) {
+                $productId = (int) ($item['id'] ?? 0);
+                $quantity  = (int) ($item['qty'] ?? 0);
+
+                if ($productId <= 0 || $quantity <= 0) {
+                    DB::rollBack();
+                    \Storage::disk('public')->delete($path);
+                    return back()->withInput()->with('error', 'Data item keranjang tidak valid.');
+                }
+
+                $product = Product::lockForUpdate()->find($productId);
+
+                if (!$product || !$product->is_active) {
+                    DB::rollBack();
+                    \Storage::disk('public')->delete($path);
+                    return back()->withInput()->with('error', 'Maaf, produk "' . ($item['name'] ?? 'Unknown') . '" sudah tidak tersedia.');
+                }
+
+                if ($product->stock < $quantity) {
+                    DB::rollBack();
+                    \Storage::disk('public')->delete($path);
+                    $msg = $product->stock > 0
+                        ? 'Maaf, stok buket ' . $product->name . ' baru saja habis! Sisa stok: ' . $product->stock
+                        : 'Maaf, stok buket ' . $product->name . ' baru saja habis!';
+                    return back()->withInput()->with('error', $msg);
+                }
+
+                $priceSnapshot = $product->price;
+                $subtotal = $priceSnapshot * $quantity;
+                $totalPrice += $subtotal;
+
+                $orderItems[] = [
+                    'product_id'            => $productId,
+                    'product_name_snapshot' => $product->name,
+                    'price_snapshot'        => $priceSnapshot,
+                    'quantity'              => $quantity,
+                    'subtotal'              => $subtotal,
+                ];
+
+                $product->decrement('stock', $quantity);
+            }
+
             $order = Order::create([
-                'order_code' => $orderCode,
-                'user_id' => Auth::id(),
-                'orderer_name' => $validated['orderer_name'],
-                'orderer_phone' => $validated['orderer_phone'],
-                'needed_date' => $validated['needed_date'],
-                'pickup_method' => $validated['pickup_method'],
-                'delivery_address' => $validated['pickup_method'] === 'delivery' ? $validated['delivery_address'] : null,
-                'special_note' => $validated['special_note'] ?? null,
-                'total_price' => $totalPrice,
+                'order_code'        => $orderCode,
+                'user_id'           => Auth::id(),
+                'orderer_name'      => $validated['orderer_name'],
+                'orderer_phone'     => $validated['orderer_phone'],
+                'needed_date'       => $validated['needed_date'],
+                'pickup_method'     => $validated['pickup_method'],
+                'delivery_address'  => $validated['pickup_method'] === 'delivery' ? $validated['delivery_address'] : null,
+                'special_note'      => $validated['special_note'] ?? null,
+                'total_price'       => $totalPrice,
                 'payment_proof_url' => $path,
-                'status' => 'menunggu_konfirmasi',
+                'status'            => 'menunggu_konfirmasi',
             ]);
 
-            OrderItem::create([
-                'order_id' => $order->id,
-                'product_id' => $product->id,
-                'product_name_snapshot' => $product->name,
-                'price_snapshot' => $priceSnapshot,
-                'quantity' => $quantity,
-                'subtotal' => $subtotal,
-            ]);
-
-            $product->decrement('stock', $quantity);
+            foreach ($orderItems as $oi) {
+                $oi['order_id'] = $order->id;
+                OrderItem::create($oi);
+            }
 
             TrackingLog::create([
-                'order_id' => $order->id,
+                'order_id'       => $order->id,
                 'previous_status' => null,
-                'new_status' => 'menunggu_konfirmasi',
-                'changed_by' => Auth::id(),
-                'note' => 'Pesanan dibuat oleh pelanggan.',
+                'new_status'     => 'menunggu_konfirmasi',
+                'changed_by'     => Auth::id(),
+                'note'           => 'Pesanan dibuat oleh pelanggan.',
             ]);
 
             DB::commit();
 
             return redirect()->route('customer.orders.index')
-                ->with('success', 'Pesanan berhasil dibuat! Kode pesanan: ' . $orderCode);
+                ->with('success', 'Pesanan berhasil dibuat! Kode pesanan: ' . $orderCode)
+                ->header('X-Clear-Cart', 'true');
         } catch (\Exception $e) {
             DB::rollBack();
             \Storage::disk('public')->delete($path);

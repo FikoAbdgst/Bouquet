@@ -18,12 +18,31 @@
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>window.isAuthenticated = {{ auth()->check() ? 'true' : 'false' }};</script>
+    <script>
+    window.CartStorage = {
+      KEY: 'cart',
+      get() { try { return JSON.parse(localStorage.getItem(this.KEY)) || []; } catch { return []; } },
+      save(items) { localStorage.setItem(this.KEY, JSON.stringify(items)); window.dispatchEvent(new Event('cart-updated')); },
+      addItem(item) { const items = this.get(); const existing = items.find(i => i.id === item.id); if (existing) { existing.qty += item.qty; } else { items.push(item); } this.save(items); },
+      updateQty(id, qty) { this.save(this.get().filter(i => { if (i.id === id) { i.qty = qty; return qty > 0; } return true; })); },
+      removeItem(id) { this.save(this.get().filter(i => i.id !== id)); },
+      clear() { localStorage.removeItem(this.KEY); window.dispatchEvent(new Event('cart-updated')); },
+      count() { return this.get().reduce((s, i) => s + i.qty, 0); },
+      total() { return this.get().reduce((s, i) => s + i.price * i.qty, 0); }
+    };
+    window.formatRupiah = function(num) { return 'Rp ' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.'); };
+    window.updateCartBadges = function() {
+      var count = window.CartStorage.count();
+      document.querySelectorAll('.cart-badge-desktop, .cart-badge-mobile').forEach(function(el) {
+        if (count > 0) { el.textContent = count > 99 ? '99+' : count; el.classList.remove('hidden'); } else { el.classList.add('hidden'); }
+      });
+    };
+    window.addEventListener('cart-updated', window.updateCartBadges);
+    document.addEventListener('DOMContentLoaded', function() { window.updateCartBadges(); });
+    </script>
 </head>
 <body class="bg-rose-50/50 min-h-screen flex flex-col font-sans antialiased">
-
-    @php
-        $cartCount = collect(session('cart', []))->sum();
-    @endphp
 
     {{-- Navbar --}}
     <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-rose-100">
@@ -48,9 +67,7 @@
                     {{-- Cart Icon --}}
                     <a href="{{ route('customer.cart') }}" class="relative text-slate-600 hover:text-rose-600 font-medium transition px-3 py-2 rounded-lg hover:bg-rose-50">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
-                        @if($cartCount > 0)
-                            <span class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
-                        @endif
+                        <span class="cart-badge-desktop absolute -top-0.5 -right-0.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm hidden"></span>
                     </a>
 
                     @auth
@@ -94,9 +111,7 @@
                     {{-- Mobile Cart --}}
                     <a href="{{ route('customer.cart') }}" class="relative text-slate-600 hover:text-rose-600 p-2 rounded-lg hover:bg-rose-50">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
-                        @if($cartCount > 0)
-                            <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
-                        @endif
+                        <span class="cart-badge-mobile absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm hidden"></span>
                     </a>
                     <button onclick="toggleMobileMenu()" class="text-slate-600 hover:text-rose-600 focus:outline-none p-2 rounded-lg hover:bg-rose-50">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,9 +129,7 @@
                 <a href="{{ route('customer.catalog') }}" class="block py-2.5 px-3 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl font-medium transition">Katalog</a>
                 <a href="{{ route('customer.cart') }}" class="flex items-center justify-between py-2.5 px-3 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl font-medium transition">
                     <span>Keranjang</span>
-                    @if($cartCount > 0)
-                        <span class="w-6 h-6 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{{ $cartCount }}</span>
-                    @endif
+                    <span class="cart-badge-mobile w-6 h-6 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center hidden"></span>
                 </a>
 
                 @auth

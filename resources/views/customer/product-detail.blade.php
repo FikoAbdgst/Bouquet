@@ -72,14 +72,11 @@
 
                     {{-- Add to Cart --}}
                     @if($product->stock > 0)
-                        <form action="{{ route('customer.cart.add', $product) }}" method="POST" id="add-to-cart-form">
-                            @csrf
-                            <input type="hidden" name="quantity" id="cart-quantity-input" value="1">
-                            <button type="submit"
-                                    class="block w-full text-center bg-rose-400 text-white py-3.5 rounded-xl hover:bg-rose-500 font-semibold transition-all duration-200 shadow-sm hover:shadow-md">
-                                🛒 Tambah ke Keranjang
-                            </button>
-                        </form>
+                        <button type="button" id="btn-add-cart"
+                                class="block w-full text-center bg-rose-400 text-white py-3.5 rounded-xl hover:bg-rose-500 font-semibold transition-all duration-200 shadow-sm hover:shadow-md">
+                            🛒 Tambah ke Keranjang
+                        </button>
+                        <p id="cart-feedback" class="text-sm text-emerald-600 font-medium hidden"></p>
                     @else
                         <div class="block w-full text-center bg-slate-100 text-slate-400 py-3.5 rounded-xl font-semibold cursor-not-allowed">
                             Stok Habis
@@ -108,7 +105,6 @@ function incrementQty() {
     let val = parseInt(input.value);
     if (val < max) {
         input.value = val + 1;
-        document.getElementById('cart-quantity-input').value = input.value;
     }
 }
 function decrementQty() {
@@ -116,11 +112,22 @@ function decrementQty() {
     let val = parseInt(input.value);
     if (val > 1) {
         input.value = val - 1;
-        document.getElementById('cart-quantity-input').value = input.value;
     }
 }
-document.getElementById('cart-quantity').addEventListener('change', function() {
-    document.getElementById('cart-quantity-input').value = this.value;
+
+document.getElementById('btn-add-cart')?.addEventListener('click', function() {
+    const qty = parseInt(document.getElementById('cart-quantity').value);
+    CartStorage.addItem({
+        id:    {{ $product->id }},
+        name:  @json($product->name),
+        price: {{ $product->price }},
+        image: @json($product->primaryImage ? Storage::url($product->primaryImage->image_url) : ''),
+        qty:   qty
+    });
+    const fb = document.getElementById('cart-feedback');
+    fb.textContent = 'Ditambahkan ke keranjang! 🛒';
+    fb.classList.remove('hidden');
+    setTimeout(() => fb.classList.add('hidden'), 2500);
 });
 </script>
 @endsection

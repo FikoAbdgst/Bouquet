@@ -49,13 +49,18 @@
 @if($products->count() > 0)
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @foreach($products as $product)
-            <a href="{{ route('customer.catalog.show', $product) }}" class="group bg-white rounded-2xl border border-rose-100 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <div class="aspect-square bg-gradient-to-br from-rose-50 to-pink-50 overflow-hidden">
+            <a href="{{ route('customer.catalog.show', $product) }}" class="group block bg-white rounded-2xl border border-rose-100 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative">
+                <div class="aspect-square bg-gradient-to-br from-rose-50 to-pink-50 overflow-hidden relative">
                     @if($product->primaryImage)
                         <img src="{{ Storage::url($product->primaryImage->image_url) }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     @else
                         <div class="w-full h-full flex items-center justify-center text-5xl text-rose-200 group-hover:scale-110 transition-transform duration-500">🌸</div>
                     @endif
+                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-all duration-300 flex items-center justify-center">
+                        <span class="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-3 shadow-lg">
+                            <svg class="w-6 h-6 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </span>
+                    </div>
                 </div>
                 <div class="p-4">
                     <span class="text-xs font-semibold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wider">{{ $product->category }}</span>
@@ -80,3 +85,5 @@
     </div>
 @endif
 @endsection
+
+

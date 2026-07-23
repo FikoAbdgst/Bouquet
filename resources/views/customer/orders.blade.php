@@ -57,3 +57,11 @@
     @endif
 </div>
 @endsection
+
+@push('scripts')
+<script>
+if (typeof CartStorage !== 'undefined' && CartStorage.get().length > 0) {
+    CartStorage.clear();
+}
+</script>
+@endpush

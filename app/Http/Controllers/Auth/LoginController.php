@@ -38,6 +38,11 @@ class LoginController extends Controller
                 return redirect()->route('admin.dashboard');
             }
 
+            $redirect = $request->query('redirect');
+            if ($redirect && str_starts_with($redirect, '/')) {
+                return redirect($redirect);
+            }
+
             return redirect()->route('customer.dashboard');
         }
 

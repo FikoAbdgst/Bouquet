@@ -27,11 +27,12 @@ Route::post('/register', [RegisterController::class, 'register']);
 Route::get('/catalog', [CatalogController::class, 'index'])->name('customer.catalog');
 Route::get('/catalog/{product}', [CatalogController::class, 'show'])->name('customer.catalog.show');
 
-// Cart Routes (Session-based, works for guests & logged-in users)
+// Cart Routes (Guest-accessible, localStorage-based)
 Route::get('/cart', [CartController::class, 'index'])->name('customer.cart');
-Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('customer.cart.add');
-Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('customer.cart.remove');
-Route::delete('/cart/clear', [CartController::class, 'clear'])->name('customer.cart.clear');
+Route::post('/cart/check-stock', [CartController::class, 'checkStock'])->name('customer.cart.check-stock');
+
+// Checkout Route (requires login)
+Route::get('/orders/create', [OrderController::class, 'checkout'])->middleware('auth')->name('orders.checkout');
 
 // Authenticated Customer Routes
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
