@@ -1,22 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="text-center mb-8">
-    <h1 class="text-3xl font-bold text-pink-800">🌸 Katalog Buket Bunga</h1>
-    <p class="mt-2 text-pink-600">Temukan buket bunga terindah untuk momen spesial Anda</p>
+{{-- Hero Section --}}
+<div class="text-center mb-10">
+    <h1 class="text-4xl sm:text-5xl font-bold text-slate-800 tracking-tight">
+        Katalog <span class="bg-gradient-to-r from-rose-500 to-pink-500 bg-clip-text text-transparent">Buket Bunga</span>
+    </h1>
+    <p class="mt-3 text-lg text-slate-500 max-w-xl mx-auto">Temukan buket bunga terindah untuk momen spesial Anda</p>
 </div>
 
-<div class="bg-white shadow-sm rounded-lg border border-pink-200 p-4 mb-6">
+{{-- Filter Section --}}
+<div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-rose-100 p-5 mb-8 shadow-sm">
     <form action="{{ route('customer.catalog') }}" method="GET" class="flex flex-wrap gap-4 items-end">
         <div class="flex-1 min-w-[200px]">
-            <label class="block text-sm font-medium text-pink-700 mb-1">Cari Produk</label>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Cari Produk</label>
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama buket..."
-                   class="w-full border border-pink-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+                   class="w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50 placeholder-slate-400">
         </div>
 
         <div class="min-w-[150px]">
-            <label class="block text-sm font-medium text-pink-700 mb-1">Kategori</label>
-            <select name="category" class="w-full border border-pink-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Kategori</label>
+            <select name="category" class="w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50">
                 <option value="">Semua Kategori</option>
                 @foreach($categories as $cat)
                     <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
@@ -25,18 +29,18 @@
         </div>
 
         <div class="min-w-[120px]">
-            <label class="block text-sm font-medium text-pink-700 mb-1">Harga Min</label>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Harga Min</label>
             <input type="number" name="min_price" value="{{ request('min_price') }}" placeholder="Rp 0" min="0"
-                   class="w-full border border-pink-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+                   class="w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50 placeholder-slate-400">
         </div>
 
         <div class="min-w-[120px]">
-            <label class="block text-sm font-medium text-pink-700 mb-1">Harga Max</label>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Harga Max</label>
             <input type="number" name="max_price" value="{{ request('max_price') }}" placeholder="Rp ..." min="0"
-                   class="w-full border border-pink-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
+                   class="w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50 placeholder-slate-400">
         </div>
 
-        <button type="submit" class="bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700 font-medium transition shadow-sm">
+        <button type="submit" class="bg-rose-400 text-white px-6 py-2.5 rounded-xl hover:bg-rose-500 font-medium transition-all duration-200 shadow-sm hover:shadow-md text-sm">
             Filter
         </button>
     </form>
@@ -45,33 +49,34 @@
 @if($products->count() > 0)
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         @foreach($products as $product)
-            <a href="{{ route('customer.catalog.show', $product) }}" class="bg-white rounded-lg shadow-sm border border-pink-200 overflow-hidden hover:shadow-md transition-shadow">
-                <div class="aspect-square bg-pink-50">
+            <a href="{{ route('customer.catalog.show', $product) }}" class="group bg-white rounded-2xl border border-rose-100 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                <div class="aspect-square bg-gradient-to-br from-rose-50 to-pink-50 overflow-hidden">
                     @if($product->primaryImage)
-                        <img src="{{ Storage::url($product->primaryImage->image_url) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                        <img src="{{ Storage::url($product->primaryImage->image_url) }}" alt="{{ $product->name }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
                     @else
-                        <div class="w-full h-full flex items-center justify-center text-4xl text-pink-300">🌸</div>
+                        <div class="w-full h-full flex items-center justify-center text-5xl text-rose-200 group-hover:scale-110 transition-transform duration-500">🌸</div>
                     @endif
                 </div>
                 <div class="p-4">
-                    <span class="text-xs text-pink-500 bg-pink-50 px-2 py-1 rounded-full">{{ $product->category }}</span>
-                    <h3 class="mt-2 text-lg font-semibold text-pink-800 line-clamp-1">{{ $product->name }}</h3>
-                    <p class="mt-1 text-pink-600 font-bold">{{ $product->formatted_price }}</p>
+                    <span class="text-xs font-semibold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wider">{{ $product->category }}</span>
+                    <h3 class="mt-2.5 text-base font-semibold text-slate-800 line-clamp-1 group-hover:text-rose-600 transition-colors">{{ $product->name }}</h3>
+                    <p class="mt-1 text-rose-500 font-bold text-lg">{{ $product->formatted_price }}</p>
                     @if($product->stock <= 5 && $product->stock > 0)
-                        <p class="mt-1 text-xs text-orange-600">Stok tersisa {{ $product->stock }}</p>
+                        <p class="mt-1.5 text-xs font-medium text-amber-600 bg-amber-50 inline-block px-2 py-0.5 rounded-full">Stok tersisa {{ $product->stock }}</p>
                     @endif
                 </div>
             </a>
         @endforeach
     </div>
 
-    <div class="mt-8">
+    <div class="mt-10">
         {{ $products->withQueryString()->links() }}
     </div>
 @else
-    <div class="bg-white shadow-sm rounded-lg border border-pink-200 p-12 text-center">
-        <p class="text-4xl mb-4">🌺</p>
-        <p class="text-pink-600">Belum ada produk yang tersedia.</p>
+    <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-rose-100 p-16 text-center shadow-sm">
+        <p class="text-5xl mb-4">🌺</p>
+        <p class="text-slate-500 text-lg">Belum ada produk yang tersedia.</p>
+        <p class="text-sm text-slate-400 mt-1">Coba ubah filter pencarian Anda.</p>
     </div>
 @endif
 @endsection

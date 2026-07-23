@@ -6,68 +6,99 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title ?? 'BuketBunga' }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="bg-pink-50 min-h-screen flex flex-col">
+<body class="bg-rose-50/50 min-h-screen flex flex-col font-sans antialiased">
+
+    @php
+        $cartCount = collect(session('cart', []))->sum();
+    @endphp
 
     {{-- Navbar --}}
-    <nav class="bg-white shadow-sm border-b border-pink-200 sticky top-0 z-50">
+    <nav class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-rose-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
 
                 {{-- Logo --}}
                 <div class="flex items-center">
-                    <a href="{{ route('home') }}" class="flex items-center space-x-2">
-                        <span class="text-2xl">🌸</span>
-                        <span class="text-xl font-bold text-pink-800">BuketBunga</span>
+                    <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
+                        <span class="text-2xl group-hover:scale-110 transition-transform duration-200">🌸</span>
+                        <span class="text-xl font-bold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">BuketBunga</span>
                     </a>
                 </div>
 
                 {{-- Desktop Menu --}}
-                <div class="hidden md:flex md:items-center md:space-x-6">
+                <div class="hidden md:flex md:items-center md:space-x-1">
                     <a href="{{ route('customer.catalog') }}"
-                       class="text-pink-700 hover:text-pink-900 font-medium transition">
-                        Katalog Produk
+                       class="text-slate-600 hover:text-rose-600 font-medium transition px-3 py-2 rounded-lg hover:bg-rose-50">
+                        Katalog
+                    </a>
+
+                    {{-- Cart Icon --}}
+                    <a href="{{ route('customer.cart') }}" class="relative text-slate-600 hover:text-rose-600 font-medium transition px-3 py-2 rounded-lg hover:bg-rose-50">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                        @if($cartCount > 0)
+                            <span class="absolute -top-0.5 -right-0.5 w-5 h-5 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
+                        @endif
                     </a>
 
                     @auth
                         @if(Auth::user()->isCustomer())
-                            <a href="{{ route('customer.orders.index') }}" class="text-pink-700 hover:text-pink-900 font-medium transition">
-                                Riwayat Pesanan
+                            <a href="{{ route('customer.orders.index') }}" class="text-slate-600 hover:text-rose-600 font-medium transition px-3 py-2 rounded-lg hover:bg-rose-50">
+                                Pesanan Saya
                             </a>
                         @endif
 
                         <div class="relative ml-2">
-                            <button onclick="toggleDropdown()" class="flex items-center space-x-1 text-pink-700 hover:text-pink-900 font-medium transition focus:outline-none">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-pink-200 text-pink-700 text-sm font-bold">
+                            <button onclick="toggleDropdown()" class="flex items-center space-x-2 text-slate-600 hover:text-rose-600 font-medium transition focus:outline-none px-2 py-1.5 rounded-xl hover:bg-rose-50">
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 text-white text-sm font-bold shadow-sm">
                                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                 </span>
-                                <span>{{ Auth::user()->name }}</span>
+                                <span class="text-sm">{{ Auth::user()->name }}</span>
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </button>
 
-                            <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-pink-200 py-1 z-50">
-                                <div class="px-4 py-2 border-b border-pink-100">
-                                    <p class="text-sm font-medium text-pink-800">{{ Auth::user()->name }}</p>
-                                    <p class="text-xs text-pink-500">{{ Auth::user()->email }}</p>
+                            <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-lg border border-rose-100 py-1.5 z-50 overflow-hidden">
+                                <div class="px-4 py-3 border-b border-rose-50">
+                                    <p class="text-sm font-semibold text-slate-800">{{ Auth::user()->name }}</p>
+                                    <p class="text-xs text-slate-400 mt-0.5">{{ Auth::user()->email }}</p>
                                 </div>
                                 @if(Auth::user()->isCustomer())
-                                    <a href="{{ route('customer.orders.index') }}" class="block px-4 py-2 text-sm text-pink-700 hover:bg-pink-50">Riwayat Pesanan</a>
+                                    <a href="{{ route('customer.orders.index') }}" class="block px-4 py-2.5 text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition">Pesanan Saya</a>
                                 @endif
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Logout</button>
+                                    <button type="submit" class="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 transition">Logout</button>
                                 </form>
                             </div>
                         </div>
                     @else
-                        <a href="{{ route('login') }}" class="text-pink-700 hover:text-pink-900 font-medium transition">Login</a>
-                        <a href="{{ route('register') }}" class="bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 font-medium transition shadow-sm">Daftar</a>
+                        <a href="{{ route('login') }}" class="text-slate-600 hover:text-rose-600 font-medium transition px-3 py-2 rounded-lg hover:bg-rose-50">Login</a>
+                        <a href="{{ route('register') }}" class="bg-rose-400 text-white px-5 py-2 rounded-xl hover:bg-rose-500 font-medium transition shadow-sm text-sm">Daftar</a>
                     @endauth
                 </div>
 
                 {{-- Mobile Menu Button --}}
-                <div class="flex items-center md:hidden">
-                    <button onclick="toggleMobileMenu()" class="text-pink-700 hover:text-pink-900 focus:outline-none">
+                <div class="flex items-center md:hidden space-x-1">
+                    {{-- Mobile Cart --}}
+                    <a href="{{ route('customer.cart') }}" class="relative text-slate-600 hover:text-rose-600 p-2 rounded-lg hover:bg-rose-50">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                        @if($cartCount > 0)
+                            <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm">{{ $cartCount > 99 ? '99+' : $cartCount }}</span>
+                        @endif
+                    </a>
+                    <button onclick="toggleMobileMenu()" class="text-slate-600 hover:text-rose-600 focus:outline-none p-2 rounded-lg hover:bg-rose-50">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path id="menu-icon-open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                             <path id="menu-icon-close" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
@@ -78,25 +109,39 @@
         </div>
 
         {{-- Mobile Menu --}}
-        <div id="mobile-menu" class="hidden md:hidden border-t border-pink-200 bg-white">
-            <div class="px-4 py-3 space-y-2">
-                <a href="{{ route('customer.catalog') }}" class="block py-2 text-pink-700 hover:text-pink-900 font-medium">Katalog Produk</a>
+        <div id="mobile-menu" class="hidden md:hidden border-t border-rose-100 bg-white/95 backdrop-blur-md">
+            <div class="px-4 py-3 space-y-1">
+                <a href="{{ route('customer.catalog') }}" class="block py-2.5 px-3 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl font-medium transition">Katalog</a>
+                <a href="{{ route('customer.cart') }}" class="flex items-center justify-between py-2.5 px-3 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl font-medium transition">
+                    <span>Keranjang</span>
+                    @if($cartCount > 0)
+                        <span class="w-6 h-6 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{{ $cartCount }}</span>
+                    @endif
+                </a>
 
                 @auth
                     @if(Auth::user()->isCustomer())
-                        <a href="{{ route('customer.orders.index') }}" class="block py-2 text-pink-700 hover:text-pink-900 font-medium">Riwayat Pesanan</a>
+                        <a href="{{ route('customer.orders.index') }}" class="block py-2.5 px-3 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl font-medium transition">Pesanan Saya</a>
                     @endif
-                    <div class="border-t border-pink-100 pt-2 mt-2">
-                        <p class="text-sm text-pink-800 font-medium">{{ Auth::user()->name }}</p>
-                        <form action="{{ route('logout') }}" method="POST" class="mt-2">
+                    <div class="border-t border-rose-100 pt-2 mt-2">
+                        <div class="flex items-center space-x-3 px-3 py-2">
+                            <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-gradient-to-br from-rose-400 to-pink-500 text-white text-sm font-bold shadow-sm">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            </span>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">{{ Auth::user()->name }}</p>
+                                <p class="text-xs text-slate-400">{{ Auth::user()->email }}</p>
+                            </div>
+                        </div>
+                        <form action="{{ route('logout') }}" method="POST" class="mt-1">
                             @csrf
-                            <button type="submit" class="text-red-600 hover:text-red-800 font-medium">Logout</button>
+                            <button type="submit" class="w-full text-left px-3 py-2.5 text-sm text-slate-600 hover:bg-rose-50 hover:text-rose-600 rounded-xl font-medium transition">Logout</button>
                         </form>
                     </div>
                 @else
-                    <div class="border-t border-pink-100 pt-2 mt-2 space-y-2">
-                        <a href="{{ route('login') }}" class="block py-2 text-pink-700 hover:text-pink-900 font-medium">Login</a>
-                        <a href="{{ route('register') }}" class="block text-center bg-pink-500 text-white px-4 py-2 rounded-lg hover:bg-pink-600 font-medium">Daftar</a>
+                    <div class="border-t border-rose-100 pt-2 mt-2 space-y-1">
+                        <a href="{{ route('login') }}" class="block py-2.5 px-3 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl font-medium transition">Login</a>
+                        <a href="{{ route('register') }}" class="block text-center bg-rose-400 text-white px-4 py-2.5 rounded-xl hover:bg-rose-500 font-medium transition shadow-sm">Daftar</a>
                     </div>
                 @endauth
             </div>
@@ -106,36 +151,35 @@
     {{-- Flash Messages --}}
     <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4">
         @if(session('success'))
-            <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
-                {{ session('success') }}
+            <div class="mb-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl flex items-center shadow-sm">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                <span class="text-sm font-medium">{{ session('success') }}</span>
             </div>
         @endif
         @if(session('error'))
-            <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-center">
-                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-                {{ session('error') }}
+            <div class="mb-4 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl flex items-center shadow-sm">
+                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                <span class="text-sm font-medium">{{ session('error') }}</span>
             </div>
         @endif
     </div>
 
     {{-- Main Content --}}
-    <main class="flex-1 max-w-7xl mx-auto w-full py-6 px-4 sm:px-6 lg:px-8">
+    <main class="flex-1 max-w-7xl mx-auto w-full py-8 px-4 sm:px-6 lg:px-8">
         @yield('content')
     </main>
 
     {{-- Footer --}}
-    <footer class="bg-white border-t border-pink-200 mt-auto">
-        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center space-y-2 md:space-y-0">
+    <footer class="bg-white/60 backdrop-blur-sm border-t border-rose-100 mt-auto">
+        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                 <div class="flex items-center space-x-2">
-                    <span class="text-lg">🌸</span>
-                    <span class="text-sm font-medium text-pink-700">BuketBunga</span>
+                    <span class="text-xl">🌸</span>
+                    <span class="text-sm font-semibold bg-gradient-to-r from-rose-600 to-pink-600 bg-clip-text text-transparent">BuketBunga</span>
                 </div>
-                <p class="text-sm text-pink-500">&copy; {{ date('Y') }} BuketBunga. Semua hak dilindungi.</p>
-                <div class="flex space-x-4 text-sm text-pink-500">
-                    <a href="#" class="hover:text-pink-700">Tentang Kami</a>
-                    <a href="#" class="hover:text-pink-700">Kontak</a>
+                <p class="text-sm text-slate-400">&copy; {{ date('Y') }} BuketBunga. Dibuat dengan ❤️ untuk momen spesial Anda.</p>
+                <div class="flex space-x-6 text-sm text-slate-400">
+                    <a href="mailto:admin@buketbunga.com" class="hover:text-rose-500 transition">Kontak</a>
                 </div>
             </div>
         </div>
@@ -156,7 +200,6 @@
             iconClose.classList.toggle('hidden');
         }
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
             const dropdown = document.getElementById('user-dropdown');
             const button = e.target.closest('[onclick="toggleDropdown()"]');

@@ -6,12 +6,13 @@ use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CatalogController;
 use App\Http\Controllers\Customer\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect()->route('customer.catalog');
 })->name('home');
 
 // Auth Routes
@@ -22,14 +23,21 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
-// Customer Routes
+// Public Routes (Guest Mode)
+Route::get('/catalog', [CatalogController::class, 'index'])->name('customer.catalog');
+Route::get('/catalog/{product}', [CatalogController::class, 'show'])->name('customer.catalog.show');
+
+// Cart Routes (Session-based, works for guests & logged-in users)
+Route::get('/cart', [CartController::class, 'index'])->name('customer.cart');
+Route::post('/cart/add/{product}', [CartController::class, 'add'])->name('customer.cart.add');
+Route::delete('/cart/remove/{productId}', [CartController::class, 'remove'])->name('customer.cart.remove');
+Route::delete('/cart/clear', [CartController::class, 'clear'])->name('customer.cart.clear');
+
+// Authenticated Customer Routes
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', function () {
         return view('customer.dashboard');
     })->name('dashboard');
-
-    Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
-    Route::get('/catalog/{product}', [CatalogController::class, 'show'])->name('catalog.show');
 
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
