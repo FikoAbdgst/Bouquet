@@ -124,11 +124,13 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        $leadDays = (int) env('MIN_ORDER_LEAD_DAYS', 1);
+
         $validated = $request->validate([
             'product_id' => ['required', 'exists:products,id'],
             'orderer_name' => ['required', 'string', 'max:255'],
-            'orderer_phone' => ['required', 'string', 'max:20'],
-            'needed_date' => ['required', 'date', 'after:today'],
+            'orderer_phone' => ['required', 'string', 'max:20', 'regex:/^08[0-9]{8,11}$/'],
+            'needed_date' => ['required', 'date', 'after:' . now()->addDays($leadDays - 1)->format('Y-m-d')],
             'pickup_method' => ['required', 'in:self_pickup,delivery'],
             'delivery_address' => ['required_if:pickup_method,delivery', 'nullable', 'string'],
             'special_note' => ['nullable', 'string', 'max:500'],

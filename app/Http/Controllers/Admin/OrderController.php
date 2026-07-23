@@ -67,6 +67,17 @@ class OrderController extends Controller
         return back()->with('success', 'Pembayaran untuk pesanan ' . $order->order_code . ' berhasil diverifikasi.');
     }
 
+    public function updateNote(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'admin_note' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $order->update(['admin_note' => $validated['admin_note'] ?? null]);
+
+        return back()->with('success', 'Catatan admin berhasil diperbarui.');
+    }
+
     public function updateStatus(Request $request, Order $order)
     {
         $validated = $request->validate([

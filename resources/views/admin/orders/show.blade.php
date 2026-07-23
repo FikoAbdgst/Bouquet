@@ -203,7 +203,16 @@
             {{-- Admin Note --}}
             <div class="bg-white rounded-lg shadow-sm border border-pink-200 p-5">
                 <h2 class="text-lg font-semibold text-pink-800 mb-2">Catatan Admin</h2>
-                <p class="text-sm text-pink-600">{{ $order->admin_note ?? 'Tidak ada catatan.' }}</p>
+                <form action="{{ route('admin.orders.update-note', $order) }}" method="POST">
+                    @csrf
+                    @method('PATCH')
+                    <textarea name="admin_note" rows="3"
+                              class="w-full border border-pink-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm mb-2"
+                              placeholder="Tambahkan catatan untuk pesanan ini...">{{ $order->admin_note }}</textarea>
+                    <button type="submit" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 text-sm font-medium transition shadow-sm">
+                        Simpan Catatan
+                    </button>
+                </form>
             </div>
         </div>
     </div>
