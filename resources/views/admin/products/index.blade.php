@@ -34,7 +34,12 @@
                                         <div class="h-12 w-12 bg-pink-100 rounded flex items-center justify-center text-pink-400 text-sm">No</div>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-pink-900">{{ $product->name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-pink-900">
+                                    {{ $product->name }}
+                                    @if($bestSellerIds->contains($product->id))
+                                        <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700">🔥 Best Seller</span>
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-pink-600">{{ $product->category }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-pink-600">{{ $product->formatted_price }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-pink-600">{{ $product->stock }}</td>

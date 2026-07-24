@@ -46,6 +46,36 @@
         </div>
     </div>
 
+    {{-- Best Seller --}}
+    <div class="bg-white rounded-lg shadow-sm border border-pink-200 overflow-hidden mb-8">
+        <div class="px-5 py-4 border-b border-pink-100">
+            <h2 class="text-lg font-semibold text-pink-800">🔥 Best Seller</h2>
+        </div>
+        @if($bestSellers->isEmpty())
+            <div class="p-8 text-center">
+                <p class="text-pink-500">Belum ada data penjualan.</p>
+            </div>
+        @else
+            <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                @foreach($bestSellers as $best)
+                    <div class="flex items-center space-x-3 p-3 rounded-lg bg-pink-50 border border-pink-100">
+                        <div class="w-12 h-12 rounded-lg overflow-hidden bg-pink-100 flex-shrink-0">
+                            @if($best->primaryImage)
+                                <img src="{{ Storage::url($best->primaryImage->image_url) }}" class="w-full h-full object-cover">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center text-pink-300 text-lg">🌸</div>
+                            @endif
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-semibold text-pink-800 truncate">{{ $best->name }}</p>
+                            <p class="text-xs text-pink-500">{{ $best->formatted_price }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
     {{-- Pesanan Terbaru --}}
     <div class="bg-white rounded-lg shadow-sm border border-pink-200 overflow-hidden">
         <div class="px-5 py-4 border-b border-pink-100 flex items-center justify-between">

@@ -9,11 +9,10 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CatalogController;
 use App\Http\Controllers\Customer\OrderController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('customer.catalog');
-})->name('home');
+Route::get('/', HomeController::class)->name('home');
 
 // Auth Routes
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');

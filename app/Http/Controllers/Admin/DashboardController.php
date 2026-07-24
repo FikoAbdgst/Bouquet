@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Product;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
@@ -23,6 +24,8 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        return view('admin.dashboard', compact('ordersToday', 'pendingOrders', 'totalRevenue', 'recentOrders'));
+        $bestSellers = Product::topSellers(3);
+
+        return view('admin.dashboard', compact('ordersToday', 'pendingOrders', 'totalRevenue', 'recentOrders', 'bestSellers'));
     }
 }

@@ -13,6 +13,13 @@ class RegisterController extends Controller
 {
     public function showRegistrationForm()
     {
+        if (Auth::check()) {
+            $user = Auth::user();
+            return $user->isAdmin()
+                ? redirect()->route('admin.dashboard')
+                : redirect()->route('customer.dashboard');
+        }
+
         return view('auth.register');
     }
 
