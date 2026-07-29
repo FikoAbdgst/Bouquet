@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CustomerController as AdminCustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
@@ -53,6 +54,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::resource('products', ProductController::class)->except(['show']);
     Route::post('products/{product}/restore', [ProductController::class, 'restore'])->name('products.restore');
+
+    // Categories
+    Route::resource('categories', CategoryController::class);
 
     // Orders
     Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');

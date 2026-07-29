@@ -190,12 +190,15 @@ class OrderController extends Controller
                 $subtotal = $priceSnapshot * $quantity;
                 $totalPrice += $subtotal;
 
+                $customOptions = !empty($item['custom_options']) ? $item['custom_options'] : null;
+
                 $orderItems[] = [
                     'product_id'            => $productId,
                     'product_name_snapshot' => $product->name,
                     'price_snapshot'        => $priceSnapshot,
                     'quantity'              => $quantity,
                     'subtotal'              => $subtotal,
+                    'custom_options'        => $customOptions,
                 ];
 
                 $product->decrement('stock', $quantity);

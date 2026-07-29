@@ -19,9 +19,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
                     </svg>
                 </button>
-                <a href="{{ route('admin.dashboard') }}" class="flex items-center space-x-2">
-                    <span class="text-2xl">🌸</span>
-                    <span class="text-xl font-bold text-white">Admin Panel</span>
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center">
+                    <img src="{{ asset('images/LOGO.png') }}" alt="BuketBunga" class="h-14 w-auto brightness-0 invert">
                 </a>
             </div>
 
@@ -74,6 +73,13 @@
                    class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('admin.products.*') ? 'bg-pink-100 text-pink-800' : 'text-pink-700 hover:bg-pink-50' }}">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     <span>Manajemen Produk</span>
+                </a>
+
+                {{-- Kategori --}}
+                <a href="{{ route('admin.categories.index') }}"
+                   class="flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium transition {{ request()->routeIs('admin.categories.*') ? 'bg-pink-100 text-pink-800' : 'text-pink-700 hover:bg-pink-50' }}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span>Kategori</span>
                 </a>
 
                 {{-- Pesanan --}}
@@ -142,5 +148,6 @@
             }
         });
     </script>
+    @stack('scripts')
 </body>
 </html>

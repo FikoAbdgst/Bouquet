@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +17,7 @@ class Product extends Model
         'description',
         'price',
         'category',
+        'category_id',
         'stock',
         'is_active',
     ];
@@ -27,6 +29,11 @@ class Product extends Model
             'stock' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function productCategory(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
     }
 
     public function images(): HasMany

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
@@ -12,14 +13,16 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('primaryImage')->latest()->paginate(10);
+        $products = Product::with('primaryImage', 'productCategory')->latest()->paginate(10);
         $bestSellerIds = Product::topSellers(3)->pluck('id');
         return view('admin.products.index', compact('products', 'bestSellerIds'));
     }
 
     public function create()
     {
-        return view('admin.products.create');
+        $categories = Category::orderBy('name')->get();
+
+        return view('admin.products.create', compact('categories'));
     }
 
     public function store(Request $request)
@@ -28,7 +31,8 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
-            'category' => ['required', 'string', 'max:100'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'category_id' => ['required', 'exists:categories,id'],
             'stock' => ['required', 'integer', 'min:0'],
             'images' => ['nullable', 'array', 'max:5'],
             'images.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
@@ -42,7 +46,8 @@ class ProductController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'price' => $validated['price'],
-                'category' => $validated['category'],
+                'category' => $validated['category'] ?? null,
+                'category_id' => $validated['category_id'],
                 'stock' => $validated['stock'],
                 'is_active' => true,
             ]);
@@ -73,8 +78,10 @@ class ProductController extends Controller
 
     public function edit(Product $product)
     {
-        $product->load('images');
-        return view('admin.products.edit', compact('product'));
+        $product->load('images', 'productCategory');
+        $categories = Category::orderBy('name')->get();
+
+        return view('admin.products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, Product $product)
@@ -83,7 +90,8 @@ class ProductController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'integer', 'min:0'],
-            'category' => ['required', 'string', 'max:100'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'category_id' => ['required', 'exists:categories,id'],
             'stock' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
             'images' => ['nullable', 'array', 'max:5'],
@@ -100,7 +108,8 @@ class ProductController extends Controller
                 'name' => $validated['name'],
                 'description' => $validated['description'] ?? null,
                 'price' => $validated['price'],
-                'category' => $validated['category'],
+                'category' => $validated['category'] ?? null,
+                'category_id' => $validated['category_id'],
                 'stock' => $validated['stock'],
                 'is_active' => $request->boolean('is_active', true),
             ]);

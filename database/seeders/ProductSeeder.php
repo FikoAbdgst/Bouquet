@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
 
@@ -9,91 +10,93 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
+        $categories = Category::all()->keyBy('name');
+
         $products = [
             [
-                'name' => 'Buket Mawar Merah Romantis',
-                'description' => 'Buket mawar merah segar dengan 12 tangkai, dibungkus kraft paper coklat. Cocok untuk Valentine atau anniversary.',
-                'price' => 350000,
-                'category' => 'Mawar',
-                'stock' => 15,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Buket Matahari Ceria',
-                'description' => 'Buket bunga matahari ceria dengan sentuhan baby breath. Penuh semangat dan kebahagiaan.',
-                'price' => 275000,
-                'category' => 'Matahari',
-                'stock' => 10,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Buket Lili Putih Elegan',
-                'description' => 'Buket bunga lili putih yang anggun. Sempurna untuk acara formal atau ungkapan simpati.',
-                'price' => 400000,
-                'category' => 'Lili',
-                'stock' => 8,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Buket Mixed Pastel Lembut',
-                'description' => 'Perpaduan bunga pastel lembut: rose, carnation, dan chrysanthemum dalam nuansa pink dan peach.',
-                'price' => 325000,
-                'category' => 'Mixed',
+                'name' => 'Buket Bunga Wisuda Mini',
+                'description' => 'Buket bunga segar ukuran mini dengan sentuhan pita hitam emas. Cocok untuk hadiah wisuda.',
+                'price' => 185000,
+                'category' => 'Fresh Flower',
+                'category_id' => $categories['Fresh Flower']->id,
                 'stock' => 20,
-                'is_active' => true,
             ],
             [
-                'name' => 'Buket Lavender Impian',
-                'description' => 'Buket bunga lavender dengan eucalyptus. Aroma menenangkan dan tampilan yang memukau.',
-                'price' => 290000,
-                'category' => 'Lavender',
-                'stock' => 12,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Buket Carnation Pink Sayang',
-                'description' => 'Buket carnation pink untuk Ibu dan orang tersayang. Melambangkan kasih sayang yang tulus.',
+                'name' => 'Buket Boneka Wisuda',
+                'description' => 'Buket wisuda berisi boneka teddy bear dengan bunga mawar putih dan pita toga.',
                 'price' => 250000,
-                'category' => 'Carnation',
-                'stock' => 18,
-                'is_active' => true,
+                'category' => 'Buket Boneka',
+                'category_id' => $categories['Buket Boneka']->id,
+                'stock' => 12,
             ],
             [
-                'name' => 'Buket Tulip Belanda',
-                'description' => 'Buket bunga tulip impor dari Belanda. Eksklusif dan berkelas untuk momen spesial.',
-                'price' => 550000,
-                'category' => 'Tulip',
-                'stock' => 5,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Buket Daisy Kuning Ceria',
-                'description' => 'Buket bunga daisy kuning yang ceria dan cerah. Sempurna untuk ucapan selamat dan semangat.',
-                'price' => 220000,
-                'category' => 'Daisy',
+                'name' => 'Buket Ulang Tahun Klasik',
+                'description' => 'Buket ulang tahun dengan bunga matahari, mawar merah, dan baby breath. Sempurna untuk rayakan hari spesial.',
+                'price' => 275000,
+                'category' => 'Fresh Flower',
+                'category_id' => $categories['Fresh Flower']->id,
                 'stock' => 25,
-                'is_active' => true,
             ],
             [
-                'name' => 'Buket Peony Mewah',
-                'description' => 'Buket bunga peony import yang mewah. Pilihan sempurna untuk wedding atau lamaran.',
-                'price' => 675000,
-                'category' => 'Peony',
-                'stock' => 3,
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Buket Anggrek Bulan',
-                'description' => 'Buket anggrek bulan putih yang elegan. Simbol kemewahan dan keanggunan.',
+                'name' => 'Buket Ulang Tahun Premium',
+                'description' => 'Buket ulang tahun mewah dengan 12 tangkai mawar merah, eucalyptus, dan wrapping kertas premium.',
                 'price' => 450000,
-                'category' => 'Anggrek',
-                'stock' => 7,
-                'is_active' => true,
+                'category' => 'Hand Bouquet',
+                'category_id' => $categories['Hand Bouquet']->id,
+                'stock' => 10,
+            ],
+            [
+                'name' => 'Buket Pernikahan Sweet Bridal',
+                'description' => 'Buket pengantin dengan lili putih, mawar putih, dan baby breath. Elegan dan timeless.',
+                'price' => 550000,
+                'category' => 'Hand Bouquet',
+                'category_id' => $categories['Hand Bouquet']->id,
+                'stock' => 8,
+            ],
+            [
+                'name' => 'Buket Anniversary Rose Gold',
+                'description' => 'Buket anniversary eksklusif dengan mawar rose gold, eucalyptus silver, dan pita satin.',
+                'price' => 375000,
+                'category' => 'Hand Bouquet',
+                'category_id' => $categories['Hand Bouquet']->id,
+                'stock' => 15,
+            ],
+            [
+                'name' => 'Money Bouquet Uang 50 Ribu',
+                'description' => 'Buket uang berisi 10 lembar uang 50 Ribu yang ditata artistik dengan bunga sintetis.',
+                'price' => 650000,
+                'category' => 'Buket Uang',
+                'category_id' => $categories['Buket Uang']->id,
+                'stock' => 30,
+            ],
+            [
+                'name' => 'Money Bouquet Uang 100 Ribu Mini',
+                'description' => 'Buket uang mini berisi 5 lembar 100 Ribu, cocok untuk hadiah kondangan atau ulang tahun.',
+                'price' => 700000,
+                'category' => 'Buket Uang',
+                'category_id' => $categories['Buket Uang']->id,
+                'stock' => 20,
+            ],
+            [
+                'name' => 'Buket Coklat Silverqueen',
+                'description' => 'Buket coklat Silverqueen berbagai varian, dikemas menarik dengan bunga dan pita.',
+                'price' => 150000,
+                'category' => 'Buket Coklat',
+                'category_id' => $categories['Buket Coklat']->id,
+                'stock' => 40,
+            ],
+            [
+                'name' => 'Buket Snack Campur',
+                'description' => 'Buket berisi aneka snack favorit seperti Oreo, Chitato, Tango, dan coklat, dirangkai unik.',
+                'price' => 200000,
+                'category' => 'Buket Snack',
+                'category_id' => $categories['Buket Snack']->id,
+                'stock' => 35,
             ],
         ];
 
-        foreach ($products as $product) {
-            Product::create($product);
+        foreach ($products as $data) {
+            Product::create($data);
         }
     }
 }

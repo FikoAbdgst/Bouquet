@@ -41,15 +41,17 @@
                 </div>
 
                 <div>
-                    <label for="category" class="block text-sm font-medium text-pink-700">Kategori *</label>
-                    <select name="category" id="category" required
+                    <label for="category_id" class="block text-sm font-medium text-pink-700">Kategori *</label>
+                    <select name="category_id" id="category_id" required
                             class="mt-1 block w-full border border-pink-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
-                        <option value="">Pilih Kategori</option>
-                        @foreach(['Ulang Tahun', 'Wisuda', 'Pernikahan', 'Duka Cita', 'Valentine', 'Lainnya'] as $cat)
-                            <option value="{{ $cat }}" {{ old('category', $product->category) == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                        <option value="">-- Pilih Kategori --</option>
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}" {{ old('category_id', $product->category_id) == $cat->id ? 'selected' : '' }}>
+                                {{ $cat->name }}
+                            </option>
                         @endforeach
                     </select>
-                    @error('category') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    @error('category_id') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
 
                 <div class="flex items-center">

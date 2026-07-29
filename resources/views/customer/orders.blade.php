@@ -32,8 +32,18 @@
                     <div class="space-y-1.5 text-sm text-slate-500 mb-4">
                         @foreach($order->items as $item)
                             <div class="flex justify-between">
-                                <span>{{ $item->product_name_snapshot }} × {{ $item->quantity }}</span>
-                                <span class="font-medium text-slate-700">{{ $item->formatted_subtotal }}</span>
+                                <div>
+                                    <span>{{ $item->product_name_snapshot }} × {{ $item->quantity }}</span>
+                                    @if($item->custom_options)
+                                        <div class="text-xs text-gray-400 mt-0.5">
+                                            @foreach($item->custom_options as $label => $value)
+                                                <span>{{ $label }}: {{ is_array($value) ? implode(', ', $value) : $value }}</span>
+                                                @if(!$loop->last) · @endif
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                                <span class="font-medium text-slate-700 whitespace-nowrap ml-3">{{ $item->formatted_subtotal }}</span>
                             </div>
                         @endforeach
                     </div>

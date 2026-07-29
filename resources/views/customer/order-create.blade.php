@@ -166,20 +166,31 @@ async function loadSummary() {
     emptyEl.classList.add('hidden');
     footerEl.classList.remove('hidden');
 
-    summaryEl.innerHTML = items.map(item => `
-        <div class="flex items-center gap-3" data-summary-id="${item.id}">
-            <div class="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg overflow-hidden">
-                ${item.image
-                    ? `<img src="${item.image}" class="w-full h-full object-cover">`
-                    : '<div class="w-full h-full flex items-center justify-center text-lg text-rose-200">🌸</div>'}
-            </div>
-            <div class="flex-1 min-w-0">
-                <p class="text-sm font-medium text-slate-800 truncate">${item.name}</p>
-                <p class="text-xs text-slate-400">${item.qty} x ${formatRupiah(item.price)}</p>
-            </div>
-            <p class="text-sm font-bold text-slate-800">${formatRupiah(item.price * item.qty)}</p>
-        </div>
-    `).join('');
+    function renderSummaryOptions(opts) {
+        if (!opts) return '';
+        const entries = Object.entries(opts);
+        if (entries.length === 0) return '';
+        return '<div class="mt-1 space-y-0.5">' + entries.map(function(kv) {
+            const val = Array.isArray(kv[1]) ? kv[1].join(', ') : kv[1];
+            return '<span class="text-xs text-gray-400"><b>' + kv[0] + ':</b> ' + val + '</span>';
+        }).join('') + '</div>';
+    }
+
+    summaryEl.innerHTML = items.map(function(item) {
+        return '<div class="flex items-start gap-3" data-summary-key="' + item._key + '">\
+            <div class="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg overflow-hidden">\
+                ' + (item.image
+                    ? '<img src="' + item.image + '" class="w-full h-full object-cover">'
+                    : '<div class="w-full h-full flex items-center justify-center text-lg text-rose-200">\u{1F338}</div>') + '\
+            </div>\
+            <div class="flex-1 min-w-0">\
+                <p class="text-sm font-medium text-slate-800 truncate">' + item.name + '</p>\
+                <p class="text-xs text-slate-400">' + item.qty + ' x ' + formatRupiah(item.price) + '</p>\
+                ' + renderSummaryOptions(item.custom_options) + '\
+            </div>\
+            <p class="text-sm font-bold text-slate-800">' + formatRupiah(item.price * item.qty) + '</p>\
+        </div>';
+    }).join('');
 
     try {
         const resp = await fetch(CHECK_STOCK_URL, {
@@ -201,7 +212,7 @@ async function loadSummary() {
 
         items.forEach(item => {
             const stock = stockDataMap[item.id];
-            const el = document.querySelector(`[data-summary-id="${item.id}"]`);
+            const el = document.querySelector(`[data-summary-key="${item._key}"]`);
             if (!el) return;
 
             if (!stock || !stock.is_active || item.qty > stock.stock) {

@@ -108,6 +108,14 @@
                     <div>
                         <p class="text-sm font-semibold text-slate-800">{{ $item->product_name_snapshot }}</p>
                         <p class="text-xs text-slate-400 mt-0.5">Rp {{ number_format($item->price_snapshot, 0, ',', '.') }} × {{ $item->quantity }}</p>
+                        @if($item->custom_options)
+                            <div class="mt-1 space-y-0.5">
+                                @foreach($item->custom_options as $label => $value)
+                                    <span class="text-xs text-gray-500"><b>{{ $label }}:</b> {{ is_array($value) ? implode(', ', $value) : $value }}</span>
+                                    @if(!$loop->last)<br>@endif
+                                @endforeach
+                            </div>
+                        @endif
                     </div>
                     <p class="text-sm font-bold text-slate-800">{{ $item->formatted_subtotal }}</p>
                 </div>

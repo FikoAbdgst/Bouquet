@@ -40,7 +40,13 @@
                                         <span class="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-700">🔥 Best Seller</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-pink-600">{{ $product->category }}</td>
+                                <td class="px-6 py-4 text-sm text-pink-600">
+                                    @if($product->productCategory)
+                                        <span class="inline-block px-2 py-0.5 mr-1 mb-0.5 rounded-full text-xs font-medium bg-pink-100 text-pink-700">{{ $product->productCategory->name }}</span>
+                                    @else
+                                        {{ $product->category }}
+                                    @endif
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-pink-600">{{ $product->formatted_price }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-pink-600">{{ $product->stock }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">

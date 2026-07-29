@@ -81,6 +81,14 @@
                                 <div>
                                     <p class="text-sm font-medium text-pink-800">{{ $item->product_name_snapshot }}</p>
                                     <p class="text-xs text-pink-500">Rp {{ number_format($item->price_snapshot, 0, ',', '.') }} × {{ $item->quantity }}</p>
+                                    @if($item->custom_options)
+                                        <div class="mt-1 space-y-0.5">
+                                            @foreach($item->custom_options as $label => $value)
+                                                <span class="text-xs text-pink-400"><b>{{ $label }}:</b> {{ is_array($value) ? implode(', ', $value) : $value }}</span>
+                                                @if(!$loop->last)<br>@endif
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                             <p class="text-sm font-semibold text-pink-800">{{ $item->formatted_subtotal }}</p>

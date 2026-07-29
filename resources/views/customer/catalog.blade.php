@@ -23,7 +23,7 @@
             <select name="category" class="w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50">
                 <option value="">Semua Kategori</option>
                 @foreach($categories as $cat)
-                    <option value="{{ $cat }}" {{ request('category') == $cat ? 'selected' : '' }}>{{ $cat }}</option>
+                    <option value="{{ $cat->slug }}" {{ request('category') == $cat->slug ? 'selected' : '' }}>{{ $cat->name }}</option>
                 @endforeach
             </select>
         </div>
@@ -63,7 +63,7 @@
                     </div>
                 </div>
                 <div class="p-4">
-                    <span class="text-xs font-semibold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wider">{{ $product->category }}</span>
+                    <span class="text-xs font-semibold text-rose-500 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wider">{{ $product->productCategory?->name ?? $product->category }}</span>
                     <h3 class="mt-2.5 text-base font-semibold text-slate-800 line-clamp-1 group-hover:text-rose-600 transition-colors">{{ $product->name }}</h3>
                     <p class="mt-1 text-rose-500 font-bold text-lg">{{ $product->formatted_price }}</p>
                     @if($product->stock <= 5 && $product->stock > 0)

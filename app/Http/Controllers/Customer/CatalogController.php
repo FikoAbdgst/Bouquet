@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -10,10 +11,12 @@ class CatalogController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::active()->with('primaryImage');
+        $query = Product::active()->with('primaryImage', 'productCategory');
 
         if ($request->filled('category')) {
-            $query->where('category', $request->category);
+            $query->whereHas('productCategory', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
         }
 
         if ($request->filled('min_price')) {
@@ -33,10 +36,7 @@ class CatalogController extends Controller
 
         $products = $query->latest()->paginate(12);
 
-        $categories = Product::active()
-            ->select('category')
-            ->distinct()
-            ->pluck('category');
+        $categories = Category::orderBy('name')->get(['id', 'name', 'slug']);
 
         return view('customer.catalog', compact('products', 'categories'));
     }
@@ -47,7 +47,7 @@ class CatalogController extends Controller
             abort(404);
         }
 
-        $product->load('images');
+        $product->load('images', 'productCategory.fields');
 
         return view('customer.product-detail', compact('product'));
     }

@@ -17,6 +17,7 @@ class OrderItem extends Model
         'price_snapshot',
         'quantity',
         'subtotal',
+        'custom_options',
     ];
 
     protected function casts(): array
@@ -25,6 +26,7 @@ class OrderItem extends Model
             'price_snapshot' => 'integer',
             'quantity' => 'integer',
             'subtotal' => 'integer',
+            'custom_options' => 'array',
         ];
     }
 

@@ -32,7 +32,13 @@
 
             {{-- Product Info --}}
             <div class="md:w-1/2 p-8">
-                <span class="inline-block text-xs font-semibold text-rose-500 bg-rose-50 px-3 py-1.5 rounded-full uppercase tracking-wider">{{ $product->category }}</span>
+                <div class="flex flex-wrap gap-1.5">
+                    @if($product->productCategory)
+                        <span class="inline-block text-xs font-semibold text-rose-500 bg-rose-50 px-3 py-1.5 rounded-full uppercase tracking-wider">{{ $product->productCategory->name }}</span>
+                    @else
+                        <span class="inline-block text-xs font-semibold text-rose-500 bg-rose-50 px-3 py-1.5 rounded-full uppercase tracking-wider">{{ $product->category }}</span>
+                    @endif
+                </div>
                 <h1 class="mt-4 text-3xl font-bold text-slate-800">{{ $product->name }}</h1>
                 <p class="mt-3 text-3xl font-bold text-rose-500">{{ $product->formatted_price }}</p>
 
@@ -98,6 +104,80 @@
     </div>
 </div>
 
+{{-- Custom Options Modal --}}
+<div id="custom-options-modal" class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-bold text-slate-800">Kustomisasi {{ $product->name }}</h2>
+            <button type="button" onclick="closeModal()" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form id="custom-options-form" onsubmit="return addToCartWithOptions(event)">
+            @if($product->productCategory && $product->productCategory->fields->count() > 0)
+                @foreach($product->productCategory->fields as $field)
+                    @php $requiredAttr = $field->is_required ? 'required' : ''; @endphp
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-slate-600 mb-1.5">
+                            {{ $field->label }}
+                            @if($field->is_required) <span class="text-red-500">*</span> @endif
+                        </label>
+
+                        @if($field->type === 'text')
+                            <input type="text" name="custom_options[{{ $field->label }}]" {{ $requiredAttr }}
+                                   class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm"
+                                   placeholder="{{ $field->label }}">
+
+                        @elseif($field->type === 'select')
+                            <select name="custom_options[{{ $field->label }}]" {{ $requiredAttr }}
+                                    class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-white">
+                                <option value="">Pilih {{ $field->label }}</option>
+                                @foreach(explode(',', $field->options ?? '') as $option)
+                                    @php $option = trim($option); @endphp
+                                    @if($option)
+                                        <option value="{{ $option }}">{{ $option }}</option>
+                                    @endif
+                                @endforeach
+                            </select>
+
+                        @elseif($field->type === 'checkbox')
+                            <div class="space-y-2">
+                                @foreach(explode(',', $field->options ?? '') as $option)
+                                    @php $option = trim($option); @endphp
+                                    @if($option)
+                                        <label class="flex items-center space-x-3 p-2.5 border border-rose-100 rounded-xl cursor-pointer hover:bg-rose-50/50 transition">
+                                            <input type="checkbox" name="custom_options[{{ $field->label }}][]" value="{{ $option }}"
+                                                   class="text-rose-500 focus:ring-rose-400 rounded">
+                                            <span class="text-sm text-slate-700">{{ $option }}</span>
+                                        </label>
+                                    @endif
+                                @endforeach
+                            </div>
+                            @if($field->is_required)
+                                <p class="text-xs text-rose-500 mt-1 required-checkbox-msg hidden">Pilih setidaknya satu opsi.</p>
+                            @endif
+                        @endif
+                    </div>
+                @endforeach
+            @else
+                <p class="text-sm text-slate-400 mb-4">Tidak ada opsi kustomisasi untuk produk ini.</p>
+            @endif
+
+            <div class="mt-6 flex space-x-3">
+                <button type="button" onclick="closeModal()"
+                        class="flex-1 px-4 py-3 border border-rose-200 rounded-xl text-slate-600 hover:bg-rose-50 font-semibold transition text-sm">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="flex-1 px-4 py-3 bg-rose-400 text-white rounded-xl hover:bg-rose-500 font-semibold transition-all duration-200 shadow-sm hover:shadow-md text-sm">
+                    Tambah ke Keranjang
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
 function incrementQty() {
     const input = document.getElementById('cart-quantity');
@@ -115,19 +195,85 @@ function decrementQty() {
     }
 }
 
-document.getElementById('btn-add-cart')?.addEventListener('click', function() {
+function openModal() {
+    document.getElementById('custom-options-modal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeModal() {
+    document.getElementById('custom-options-modal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+
+document.getElementById('btn-add-cart')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    openModal();
+});
+
+document.getElementById('custom-options-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+function addToCartWithOptions(event) {
+    event.preventDefault();
+
+    const form = document.getElementById('custom-options-form');
+    const formData = new FormData(form);
+    const customOptions = {};
+    let isValid = true;
+
+    formData.forEach(function(value, key) {
+        const match = key.match(/^custom_options\[(.+?)\]$/);
+        if (match) {
+            const label = match[1];
+            if (customOptions[label]) {
+                if (!Array.isArray(customOptions[label])) {
+                    customOptions[label] = [customOptions[label]];
+                }
+                customOptions[label].push(value);
+            } else {
+                customOptions[label] = value;
+            }
+        }
+    });
+
+    {{-- Validate required checkboxes --}}
+    document.querySelectorAll('.required-checkbox-msg').forEach(function(el) { el.classList.add('hidden'); });
+    @if($product->productCategory)
+        @foreach($product->productCategory->fields as $field)
+            @if($field->type === 'checkbox' && $field->is_required)
+                (function() {
+                    const checks = document.querySelectorAll('input[name="custom_options[{{ $field->label }}][]"]:checked');
+                    if (checks.length === 0) {
+                        const msg = document.querySelector('#custom-options-form .required-checkbox-msg');
+                        if (msg) msg.classList.remove('hidden');
+                        isValid = false;
+                    }
+                })();
+            @endif
+        @endforeach
+    @endif
+
+    if (!isValid) return false;
+
     const qty = parseInt(document.getElementById('cart-quantity').value);
     CartStorage.addItem({
         id:    {{ $product->id }},
         name:  @json($product->name),
         price: {{ $product->price }},
         image: @json($product->primaryImage ? Storage::url($product->primaryImage->image_url) : ''),
-        qty:   qty
+        qty:   qty,
+        custom_options: Object.keys(customOptions).length > 0 ? customOptions : null
     });
+
+    closeModal();
+
     const fb = document.getElementById('cart-feedback');
     fb.textContent = 'Ditambahkan ke keranjang! 🛒';
     fb.classList.remove('hidden');
-    setTimeout(() => fb.classList.add('hidden'), 2500);
-});
+    setTimeout(function() { fb.classList.add('hidden'); }, 2500);
+
+    return false;
+}
 </script>
 @endsection
