@@ -3,74 +3,72 @@
 @section('content')
 <div>
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-        <h1 class="text-2xl font-bold text-pink-800">Manajemen Pelanggan</h1>
+        <h1 class="text-2xl font-medium text-[#33413A]">Manajemen Pelanggan</h1>
     </div>
 
-    {{-- Search --}}
-    <form action="{{ route('admin.customers.index') }}" method="GET" class="mb-6">
+    <form action="{{ route('admin.customers.index') }}" method="GET" class="mb-6 max-w-md">
         <div class="flex gap-2">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama, email, atau no HP..."
-                   class="flex-1 border border-pink-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm">
-            <button type="submit" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-medium transition shadow-sm">
+                   class="flex-1 border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent outline-none transition-colors placeholder-[#C9A9B4]">
+            <button type="submit" class="border border-[#D37897] bg-[#D37897] text-white hover:bg-[#D37897]/90 text-sm tracking-wide transition-colors duration-200 px-4 py-2 flex-shrink-0">
                 Cari
             </button>
         </div>
     </form>
 
     @if($customers->isEmpty())
-        <div class="bg-white rounded-lg shadow-sm border border-pink-200 p-12 text-center">
-            <p class="text-4xl mb-4">👤</p>
-            <p class="text-pink-600">Belum ada pelanggan terdaftar.</p>
+        <div class="border border-[#EFD3DE] text-center py-16 px-6">
+            <p class="text-[#33413A]">Belum ada pelanggan terdaftar.</p>
         </div>
     @else
-        <div class="bg-white rounded-lg shadow-sm border border-pink-200 overflow-hidden">
+        <div class="border border-[#EFD3DE]">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-pink-200">
-                    <thead class="bg-pink-50">
+                <table class="min-w-full divide-y divide-[#EFD3DE]">
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-pink-600 uppercase">Nama</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-pink-600 uppercase">Email</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-pink-600 uppercase">Telepon</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-pink-600 uppercase">Status</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold text-pink-600 uppercase">Terdaftar</th>
-                            <th class="px-4 py-3 text-center text-xs font-semibold text-pink-600 uppercase">Aksi</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-medium text-[#6E8577] uppercase tracking-wider">Nama</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-medium text-[#6E8577] uppercase tracking-wider">Email</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-medium text-[#6E8577] uppercase tracking-wider">Telepon</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-medium text-[#6E8577] uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-[11px] font-medium text-[#6E8577] uppercase tracking-wider">Terdaftar</th>
+                            <th class="px-4 py-3 text-right text-[11px] font-medium text-[#6E8577] uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-pink-100">
+                    <tbody class="divide-y divide-[#EFD3DE]">
                         @foreach($customers as $customer)
-                            <tr class="hover:bg-pink-50 transition">
+                            <tr class="hover:bg-[#F9DEE5]/50 transition-colors duration-150">
                                 <td class="px-4 py-3">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-pink-200 text-pink-700 text-sm font-bold">
+                                    <div class="flex items-center gap-3">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 border border-[#EFD3DE] text-[#6E8577] text-xs font-medium tracking-wide">
                                             {{ strtoupper(substr($customer->name, 0, 1)) }}
                                         </span>
-                                        <span class="text-sm font-medium text-pink-800">{{ $customer->name }}</span>
+                                        <span class="text-sm text-[#33413A]">{{ $customer->name }}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-pink-700">{{ $customer->email }}</td>
-                                <td class="px-4 py-3 text-sm text-pink-700">{{ $customer->phone }}</td>
+                                <td class="px-4 py-3 text-sm text-[#33413A]">{{ $customer->email }}</td>
+                                <td class="px-4 py-3 text-sm text-[#33413A]">{{ $customer->phone }}</td>
                                 <td class="px-4 py-3">
                                     @if($customer->is_active)
-                                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Aktif</span>
+                                        <span class="inline-block px-2.5 py-0.5 text-xs tracking-wide border border-green-600 text-green-700">Aktif</span>
                                     @else
-                                        <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-700">Nonaktif</span>
+                                        <span class="inline-block px-2.5 py-0.5 text-xs tracking-wide border border-red-400 text-red-500">Nonaktif</span>
                                     @endif
                                 </td>
-                                <td class="px-4 py-3 text-sm text-pink-600">
+                                <td class="px-4 py-3 text-sm text-[#33413A]">
                                     {{ $customer->created_at->timezone('Asia/Jakarta')->format('d M Y') }}
                                 </td>
-                                <td class="px-4 py-3 text-center">
+                                <td class="px-4 py-3 text-right">
                                     <form action="{{ route('admin.customers.toggle-active', $customer) }}" method="POST" class="inline">
                                         @csrf
                                         @method('PATCH')
                                         @if($customer->is_active)
                                             <button type="submit" onclick="return confirm('Nonaktifkan akun {{ $customer->name }}?')"
-                                                    class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition">
+                                                    class="text-xs tracking-wide text-red-600 border-b border-red-400 pb-0.5 hover:pb-1 transition-all">
                                                 Nonaktifkan
                                             </button>
                                         @else
                                             <button type="submit" onclick="return confirm('Aktifkan kembali akun {{ $customer->name }}?')"
-                                                    class="px-3 py-1 bg-green-100 text-green-700 rounded-lg text-sm font-medium hover:bg-green-200 transition">
+                                                    class="text-xs tracking-wide text-green-600 border-b border-green-400 pb-0.5 hover:pb-1 transition-all">
                                                 Aktifkan
                                             </button>
                                         @endif

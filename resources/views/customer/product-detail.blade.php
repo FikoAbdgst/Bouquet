@@ -1,115 +1,117 @@
-@extends('layouts.app')
+@extends('layouts.app', ['hideNav' => true])
+
+@push('styles')
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+    <style>
+        .font-display { font-family: "Cormorant Garamond", serif; font-optical-sizing: auto; font-weight: 500; font-style: normal; }
+        .font-body { font-family: 'Inter', system-ui, sans-serif; }
+    </style>
+@endpush
 
 @section('content')
 <div class="max-w-5xl mx-auto">
-    <a href="{{ route('customer.catalog') }}" class="inline-flex items-center text-rose-500 hover:text-rose-600 mb-8 group transition">
-        <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    <a href="{{ route('customer.catalog') }}"
+       class="inline-flex items-center gap-2 text-sm tracking-wide text-[#D37897] border-b border-[#D37897] pb-0.5 hover:gap-3 transition-all duration-200 mb-8">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
         Kembali ke Katalog
     </a>
 
-    <div class="bg-white rounded-3xl border border-rose-100 overflow-hidden shadow-sm">
-        <div class="md:flex">
-            {{-- Image Gallery --}}
-            <div class="md:w-1/2">
-                @if($product->images->count() > 0)
-                    <div class="aspect-square bg-gradient-to-br from-rose-50 to-pink-50">
-                        <img id="main-image" src="{{ Storage::url($product->primaryImage->image_url ?? $product->images->first()->image_url) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+        {{-- Image Gallery --}}
+        <div>
+            @if($product->images->count() > 0)
+                @php $swatchColors = ['#DCD6C9', '#8E9A7C', '#B9C3C6', '#D9C2B4', '#A8AC98', '#C9B4B4']; @endphp
+                <div class="aspect-[3/4] overflow-hidden" style="background-color: {{ $swatchColors[crc32($product->id) % 6] }}">
+                    <img id="main-image" src="{{ Storage::url($product->primaryImage->image_url ?? $product->images->first()->image_url) }}" alt="{{ $product->name }}" class="w-full h-full object-cover">
+                </div>
+                @if($product->images->count() > 1)
+                    <div class="flex gap-2.5 mt-4 overflow-x-auto">
+                        @foreach($product->images as $image)
+                            <button onclick="document.getElementById('main-image').src='{{ Storage::url($image->image_url) }}'"
+                                    class="flex-shrink-0 w-16 h-16 border overflow-hidden transition-colors duration-200 {{ $image->is_primary ? 'border-[#D37897]' : 'border-[#EFD3DE] hover:border-[#D37897]' }}">
+                                <img src="{{ Storage::url($image->image_url) }}" class="w-full h-full object-cover" alt="">
+                            </button>
+                        @endforeach
                     </div>
-                    @if($product->images->count() > 1)
-                        <div class="flex gap-2.5 p-4 overflow-x-auto">
-                            @foreach($product->images as $image)
-                                <button onclick="document.getElementById('main-image').src='{{ Storage::url($image->image_url) }}'"
-                                        class="flex-shrink-0 w-18 h-18 rounded-xl border-2 {{ $image->is_primary ? 'border-rose-400 ring-2 ring-rose-200' : 'border-rose-100' }} hover:border-rose-300 transition-all duration-200 overflow-hidden">
-                                    <img src="{{ Storage::url($image->image_url) }}" class="w-full h-full object-cover">
-                                </button>
-                            @endforeach
-                        </div>
-                    @endif
+                @endif
+            @else
+                <div class="aspect-[3/4] bg-[#F9DEE5] flex items-center justify-center text-6xl text-[#C9A9B4]">—</div>
+            @endif
+        </div>
+
+        {{-- Product Info --}}
+        <div>
+            @if($product->productCategory)
+                <span class="inline-block text-[10px] tracking-[0.2em] uppercase border border-[#EFD3DE] text-[#D37897] px-3 py-1.5">
+                    {{ $product->productCategory->name }}
+                </span>
+            @endif
+
+            <h1 class="font-display text-3xl sm:text-4xl font-medium text-[#33413A] mt-4 leading-tight">{{ $product->name }}</h1>
+
+            <p class="mt-3 text-2xl text-[#D37897] font-medium">{{ $product->formatted_price }}</p>
+
+            <div class="mt-4">
+                @if($product->stock > 0)
+                    <span class="text-sm text-[#5C6F5E]">Stok: {{ $product->stock }} tersedia</span>
                 @else
-                    <div class="aspect-square bg-gradient-to-br from-rose-50 to-pink-50 flex items-center justify-center text-7xl text-rose-200">🌸</div>
+                    <span class="text-sm text-[#C9A9B4]">Stok Habis</span>
                 @endif
             </div>
 
-            {{-- Product Info --}}
-            <div class="md:w-1/2 p-8">
-                <div class="flex flex-wrap gap-1.5">
-                    @if($product->productCategory)
-                        <span class="inline-block text-xs font-semibold text-rose-500 bg-rose-50 px-3 py-1.5 rounded-full uppercase tracking-wider">{{ $product->productCategory->name }}</span>
-                    @else
-                        <span class="inline-block text-xs font-semibold text-rose-500 bg-rose-50 px-3 py-1.5 rounded-full uppercase tracking-wider">{{ $product->category }}</span>
-                    @endif
+            @if($product->description)
+                <div class="mt-6 border-t border-[#EFD3DE] pt-6">
+                    <p class="text-[#5C6F5E] leading-relaxed text-sm">{{ $product->description }}</p>
                 </div>
-                <h1 class="mt-4 text-3xl font-bold text-slate-800">{{ $product->name }}</h1>
-                <p class="mt-3 text-3xl font-bold text-rose-500">{{ $product->formatted_price }}</p>
+            @endif
 
-                <div class="mt-5">
-                    @if($product->stock > 0)
-                        <span class="inline-flex items-center text-sm font-medium text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full">
-                            <span class="w-2 h-2 bg-emerald-500 rounded-full mr-1.5"></span>
-                            Stok: {{ $product->stock }} tersedia
-                        </span>
-                    @else
-                        <span class="inline-flex items-center text-sm font-medium text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full">
-                            Stok Habis
-                        </span>
-                    @endif
-                </div>
+            <div class="mt-8 space-y-3">
+                @if($product->stock > 0)
+                    <div class="flex items-center gap-3">
+                        <label class="text-[11px] tracking-[0.15em] uppercase text-[#6E8577]">Jumlah:</label>
+                        <div class="flex items-center border border-[#EFD3DE]">
+                            <button type="button" onclick="decrementQty()" class="px-3 py-2 text-[#6E8577] hover:text-[#D37897] transition font-bold text-lg leading-none">−</button>
+                            <input type="number" id="cart-quantity" value="1" min="1" max="{{ $product->stock }}" readonly
+                                   class="w-12 text-center text-sm font-medium text-[#33413A] bg-transparent border-none focus:outline-none">
+                            <button type="button" onclick="incrementQty()" class="px-3 py-2 text-[#6E8577] hover:text-[#D37897] transition font-bold text-lg leading-none">+</button>
+                        </div>
+                    </div>
 
-                @if($product->description)
-                    <div class="mt-6">
-                        <h3 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Deskripsi</h3>
-                        <p class="text-slate-600 leading-relaxed whitespace-pre-line">{{ $product->description }}</p>
+                    <button type="button" id="btn-add-cart"
+                            class="block w-full text-center border border-[#D37897] hover:bg-[#457359] hover:text-white text-[#33413A] text-sm tracking-wide py-3 transition-colors duration-200">
+                        Tambah ke Keranjang
+                    </button>
+                    <p id="cart-feedback" class="text-sm text-[#5C6F5E] font-medium hidden"></p>
+                @else
+                    <div class="block w-full text-center border border-[#EFD3DE] text-[#C9A9B4] text-sm tracking-wide py-3 cursor-not-allowed">
+                        Stok Habis
                     </div>
                 @endif
 
-                <div class="mt-8 space-y-3">
-                    {{-- Quantity Selector --}}
-                    @if($product->stock > 0)
-                        <div class="flex items-center gap-3">
-                            <label class="text-sm font-semibold text-slate-600">Jumlah:</label>
-                            <div class="flex items-center bg-rose-50 rounded-xl border border-rose-100 overflow-hidden">
-                                <button type="button" onclick="decrementQty()" class="px-3 py-2 text-slate-500 hover:text-rose-600 hover:bg-rose-100 transition font-bold">−</button>
-                                <input type="number" id="cart-quantity" value="1" min="1" max="{{ $product->stock }}" readonly
-                                       class="w-12 text-center text-sm font-medium text-slate-800 bg-transparent border-none focus:outline-none">
-                                <button type="button" onclick="incrementQty()" class="px-3 py-2 text-slate-500 hover:text-rose-600 hover:bg-rose-100 transition font-bold">+</button>
-                            </div>
-                        </div>
-                    @endif
-
-                    {{-- Add to Cart --}}
-                    @if($product->stock > 0)
-                        <button type="button" id="btn-add-cart"
-                                class="block w-full text-center bg-rose-400 text-white py-3.5 rounded-xl hover:bg-rose-500 font-semibold transition-all duration-200 shadow-sm hover:shadow-md">
-                            🛒 Tambah ke Keranjang
-                        </button>
-                        <p id="cart-feedback" class="text-sm text-emerald-600 font-medium hidden"></p>
-                    @else
-                        <div class="block w-full text-center bg-slate-100 text-slate-400 py-3.5 rounded-xl font-semibold cursor-not-allowed">
-                            Stok Habis
-                        </div>
-                    @endif
-
-                    @php
-                        $waNumber = config('app.wa_admin_number', env('WA_ADMIN_NUMBER', '6281234567890'));
-                        $waText = 'Halo Admin, saya ingin bertanya tentang buket ' . $product->name . ' seharga ' . $product->formatted_price . '...';
-                        $waUrl = 'https://wa.me/' . $waNumber . '?text=' . rawurlencode($waText);
-                    @endphp
-                    <a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer"
-                       class="block w-full text-center bg-emerald-500 text-white py-3.5 rounded-xl hover:bg-emerald-600 font-semibold transition-all duration-200 shadow-sm hover:shadow-md">
-                        💬 Tanya via WhatsApp
-                    </a>
-                </div>
+                @php
+                    $waNumber = config('app.wa_admin_number', env('WA_ADMIN_NUMBER', '6281234567890'));
+                    $waText = 'Halo Admin, saya ingin bertanya tentang buket ' . $product->name . ' seharga ' . $product->formatted_price . '...';
+                    $waUrl = 'https://wa.me/' . $waNumber . '?text=' . rawurlencode($waText);
+                @endphp
+                <a href="{{ $waUrl }}" target="_blank" rel="noopener noreferrer"
+                   class="block w-full text-center bg-[#25D366] hover:bg-[#1FBE5C] text-white text-sm tracking-wide py-3 transition-colors duration-200">
+                    Tanya via WhatsApp
+                </a>
             </div>
         </div>
     </div>
 </div>
 
 {{-- Custom Options Modal --}}
-<div id="custom-options-modal" class="fixed inset-0 z-50 hidden bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-6">
+<div id="custom-options-modal" class="fixed inset-0 z-50 hidden bg-black/40 flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full max-h-[90vh] overflow-y-auto p-6 border border-[#EFD3DE]">
         <div class="flex items-center justify-between mb-5">
-            <h2 class="text-lg font-bold text-slate-800">Kustomisasi {{ $product->name }}</h2>
-            <button type="button" onclick="closeModal()" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition">
+            <h2 class="font-display text-lg text-[#33413A]">Kustomisasi {{ $product->name }}</h2>
+            <button type="button" onclick="closeModal()" class="p-2 text-[#C9A9B4] hover:text-[#D37897] transition">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
@@ -119,19 +121,19 @@
                 @foreach($product->productCategory->fields as $field)
                     @php $requiredAttr = $field->is_required ? 'required' : ''; @endphp
                     <div class="mb-4">
-                        <label class="block text-sm font-semibold text-slate-600 mb-1.5">
+                        <label class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-2">
                             {{ $field->label }}
-                            @if($field->is_required) <span class="text-red-500">*</span> @endif
+                            @if($field->is_required) <span class="text-[#D37897]">*</span> @endif
                         </label>
 
                         @if($field->type === 'text')
                             <input type="text" name="custom_options[{{ $field->label }}]" {{ $requiredAttr }}
-                                   class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm"
+                                   class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent placeholder-[#C9A9B4] outline-none transition-colors"
                                    placeholder="{{ $field->label }}">
 
                         @elseif($field->type === 'select')
                             <select name="custom_options[{{ $field->label }}]" {{ $requiredAttr }}
-                                    class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-white">
+                                    class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent outline-none transition-colors">
                                 <option value="">Pilih {{ $field->label }}</option>
                                 @foreach(explode(',', $field->options ?? '') as $option)
                                     @php $option = trim($option); @endphp
@@ -146,31 +148,31 @@
                                 @foreach(explode(',', $field->options ?? '') as $option)
                                     @php $option = trim($option); @endphp
                                     @if($option)
-                                        <label class="flex items-center space-x-3 p-2.5 border border-rose-100 rounded-xl cursor-pointer hover:bg-rose-50/50 transition">
+                                        <label class="flex items-center space-x-3 p-2.5 border border-[#EFD3DE] cursor-pointer hover:bg-[#F9DEE5] transition">
                                             <input type="checkbox" name="custom_options[{{ $field->label }}][]" value="{{ $option }}"
-                                                   class="text-rose-500 focus:ring-rose-400 rounded">
-                                            <span class="text-sm text-slate-700">{{ $option }}</span>
+                                                   class="text-[#D37897] focus:ring-[#D37897] rounded">
+                                            <span class="text-sm text-[#33413A]">{{ $option }}</span>
                                         </label>
                                     @endif
                                 @endforeach
                             </div>
                             @if($field->is_required)
-                                <p class="text-xs text-rose-500 mt-1 required-checkbox-msg hidden">Pilih setidaknya satu opsi.</p>
+                                <p class="text-xs text-[#D37897] mt-1 required-checkbox-msg hidden">Pilih setidaknya satu opsi.</p>
                             @endif
                         @endif
                     </div>
                 @endforeach
             @else
-                <p class="text-sm text-slate-400 mb-4">Tidak ada opsi kustomisasi untuk produk ini.</p>
+                <p class="text-sm text-[#6E8577] mb-4">Tidak ada opsi kustomisasi untuk produk ini.</p>
             @endif
 
             <div class="mt-6 flex space-x-3">
                 <button type="button" onclick="closeModal()"
-                        class="flex-1 px-4 py-3 border border-rose-200 rounded-xl text-slate-600 hover:bg-rose-50 font-semibold transition text-sm">
+                        class="flex-1 px-4 py-3 border border-[#EFD3DE] text-[#6E8577] hover:border-[#D37897] hover:text-[#33413A] text-sm tracking-wide transition-colors duration-200">
                     Batal
                 </button>
                 <button type="submit"
-                        class="flex-1 px-4 py-3 bg-rose-400 text-white rounded-xl hover:bg-rose-500 font-semibold transition-all duration-200 shadow-sm hover:shadow-md text-sm">
+                        class="flex-1 px-4 py-3 bg-[#D37897] text-white hover:bg-[#D37897]/90 text-sm tracking-wide transition-colors duration-200">
                     Tambah ke Keranjang
                 </button>
             </div>
@@ -237,7 +239,6 @@ function addToCartWithOptions(event) {
         }
     });
 
-    {{-- Validate required checkboxes --}}
     document.querySelectorAll('.required-checkbox-msg').forEach(function(el) { el.classList.add('hidden'); });
     @if($product->productCategory)
         @foreach($product->productCategory->fields as $field)
@@ -269,7 +270,7 @@ function addToCartWithOptions(event) {
     closeModal();
 
     const fb = document.getElementById('cart-feedback');
-    fb.textContent = 'Ditambahkan ke keranjang! 🛒';
+    fb.textContent = 'Ditambahkan ke keranjang!';
     fb.classList.remove('hidden');
     setTimeout(function() { fb.classList.add('hidden'); }, 2500);
 

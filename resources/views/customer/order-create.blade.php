@@ -1,23 +1,39 @@
-@extends('layouts.app')
+@extends('layouts.app', ['hideNav' => true])
+
+@push('styles')
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+    <style>
+        .font-display { font-family: "Cormorant Garamond", serif; font-optical-sizing: auto; font-weight: 500; font-style: normal; }
+        .font-body { font-family: 'Inter', system-ui, sans-serif; }
+    </style>
+@endpush
 
 @section('content')
 <div class="max-w-5xl mx-auto">
-    <a href="{{ route('customer.cart') }}" class="inline-flex items-center text-rose-500 hover:text-rose-600 mb-8 group transition">
-        <svg class="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    <a href="{{ route('customer.cart') }}"
+       class="inline-flex items-center gap-2 text-sm tracking-wide text-[#D37897] border-b border-[#D37897] pb-0.5 hover:gap-3 transition-all duration-200 mb-8">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
         Kembali ke Keranjang
     </a>
 
-    <h1 class="text-3xl font-bold text-slate-800 mb-2">Form Pemesanan</h1>
-    <p class="text-slate-400 mb-8">Periksa kembali pesanan Anda sebelum mengirim.</p>
+    <div class="text-center mb-10">
+        <span class="text-xs tracking-[0.3em] uppercase text-[#6E8577]">Pemesanan</span>
+        <h2 class="font-display text-2xl sm:text-3xl font-medium text-[#33413A] mt-2">Form Pemesanan</h2>
+        <p class="text-sm text-[#C9A9B4] mt-1">Periksa kembali pesanan Anda sebelum mengirim.</p>
+    </div>
 
     @if(session('warning'))
-        <div class="mb-5 p-4 bg-amber-50 border border-amber-200 text-amber-700 rounded-2xl text-sm shadow-sm">
+        <div class="mb-5 p-4 border border-[#D9C3B4] text-[#5C6F5E] text-sm">
             {{ session('warning') }}
         </div>
     @endif
 
     @if(session('error'))
-        <div class="mb-5 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm shadow-sm">
+        <div class="mb-5 p-4 border border-[#D9C2B4] text-[#D37897] text-sm">
             {{ session('error') }}
         </div>
     @endif
@@ -25,103 +41,105 @@
     <div class="lg:flex lg:gap-8">
         {{-- Order Summary (JS-rendered from localStorage) --}}
         <div class="lg:w-5/12 mb-8 lg:mb-0">
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl border border-rose-100 p-5 shadow-sm lg:sticky lg:top-24">
-                <h2 class="font-semibold text-slate-800 mb-4">Ringkasan Pesanan</h2>
+            <div class="border border-[#EFD3DE] p-5 lg:sticky lg:top-24">
+                <h3 class="text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-4">Ringkasan Pesanan</h3>
                 <div id="summary-items" class="space-y-3 mb-4"></div>
-                <div id="summary-empty" class="hidden text-center py-8 text-slate-400">
-                    Keranjang kosong. <a href="{{ route('customer.cart') }}" class="text-rose-500 underline">Kembali ke keranjang</a>
+                <div id="summary-empty" class="hidden text-center py-8 text-[#6E8577] text-sm">
+                    Keranjang kosong. <a href="{{ route('customer.cart') }}" class="text-[#D37897] underline">Kembali ke keranjang</a>
                 </div>
-                <div id="summary-footer" class="hidden border-t border-rose-100 pt-4">
+                <div id="summary-footer" class="hidden border-t border-[#EFD3DE] pt-4">
                     <div class="flex justify-between items-center">
-                        <span class="text-slate-600 font-medium">Total</span>
-                        <span id="summary-total" class="text-xl font-bold text-slate-800"></span>
+                        <span class="text-sm text-[#6E8577]">Total</span>
+                        <span id="summary-total" class="text-xl font-medium text-[#33413A]"></span>
                     </div>
                 </div>
-                <div id="summary-stock-error" class="hidden mt-3 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 font-medium">
+                <div id="summary-stock-error" class="hidden mt-3 p-3 border border-red-200 bg-red-50 text-sm text-red-700 font-medium">
                 </div>
             </div>
         </div>
 
         {{-- Form --}}
         <div class="lg:w-7/12">
-            <form id="checkout-form" action="{{ route('customer.orders.store') }}" method="POST" enctype="multipart/form-data" class="bg-white/80 backdrop-blur-sm rounded-2xl border border-rose-100 p-7 space-y-6 shadow-sm">
+            <form id="checkout-form" action="{{ route('customer.orders.store') }}" method="POST" enctype="multipart/form-data" class="border border-[#EFD3DE] p-7 space-y-6">
                 @csrf
                 <input type="hidden" name="cart_payload" id="cart_payload" value="">
 
                 <div>
-                    <label for="orderer_name" class="block text-sm font-semibold text-slate-600 mb-1.5">Nama Pemesan *</label>
+                    <label for="orderer_name" class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-2">Nama Pemesan *</label>
                     <input type="text" name="orderer_name" id="orderer_name" value="{{ old('orderer_name', $user->name) }}" required
-                           class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50">
-                    @error('orderer_name') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                           class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent placeholder-[#C9A9B4] outline-none transition-colors">
+                    @error('orderer_name') <p class="mt-1 text-xs text-[#D37897]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label for="orderer_phone" class="block text-sm font-semibold text-slate-600 mb-1.5">Nomor HP / WhatsApp *</label>
+                    <label for="orderer_phone" class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-2">Nomor HP / WhatsApp *</label>
                     <input type="text" name="orderer_phone" id="orderer_phone" value="{{ old('orderer_phone', $user->phone) }}" required placeholder="08xxxxxxxxxx"
-                           class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50">
-                    @error('orderer_phone') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                           class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent placeholder-[#C9A9B4] outline-none transition-colors">
+                    @error('orderer_phone') <p class="mt-1 text-xs text-[#D37897]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label for="needed_date" class="block text-sm font-semibold text-slate-600 mb-1.5">Tanggal Dibutuhkan *</label>
+                    <label for="needed_date" class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-2">Tanggal Dibutuhkan *</label>
                     <input type="date" name="needed_date" id="needed_date" value="{{ old('needed_date') }}" required min="{{ $minDate }}"
-                           class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50">
-                    @error('needed_date') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                           class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent outline-none transition-colors">
+                    @error('needed_date') <p class="mt-1 text-xs text-[#D37897]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-semibold text-slate-600 mb-2">Metode Pengambilan *</label>
-                    <div class="space-y-2.5">
-                        <label class="flex items-center space-x-3 p-3.5 border border-rose-200 rounded-xl cursor-pointer hover:bg-rose-50/50 transition group">
+                    <label class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-3">Metode Pengambilan *</label>
+                    <div class="space-y-px">
+                        <label class="flex items-center gap-3 p-3.5 border border-[#EFD3DE] cursor-pointer hover:bg-[#F9DEE5] transition">
                             <input type="radio" name="pickup_method" value="self_pickup" {{ old('pickup_method') == 'self_pickup' ? 'checked' : '' }} required
-                                   onchange="toggleAddress(false)" class="text-rose-500 focus:ring-rose-400">
+                                   onchange="toggleAddress(false)" class="text-[#D37897] focus:ring-[#D37897]">
                             <div>
-                                <span class="font-medium text-slate-800 group-hover:text-rose-600 transition">Ambil Sendiri</span>
-                                <p class="text-sm text-slate-400">Diambil di toko</p>
+                                <span class="text-sm font-medium text-[#33413A]">Ambil Sendiri</span>
+                                <p class="text-xs text-[#6E8577]">Diambil di toko</p>
                             </div>
                         </label>
-                        <label class="flex items-center space-x-3 p-3.5 border border-rose-200 rounded-xl cursor-pointer hover:bg-rose-50/50 transition group">
+                        <label class="flex items-center gap-3 p-3.5 border border-[#EFD3DE] cursor-pointer hover:bg-[#F9DEE5] transition">
                             <input type="radio" name="pickup_method" value="delivery" {{ old('pickup_method') == 'delivery' ? 'checked' : '' }}
-                                   onchange="toggleAddress(true)" class="text-rose-500 focus:ring-rose-400">
+                                   onchange="toggleAddress(true)" class="text-[#D37897] focus:ring-[#D37897]">
                             <div>
-                                <span class="font-medium text-slate-800 group-hover:text-rose-600 transition">Diantar</span>
-                                <p class="text-sm text-slate-400">Dikirim ke alamat</p>
+                                <span class="text-sm font-medium text-[#33413A]">Diantar</span>
+                                <p class="text-xs text-[#6E8577]">Dikirim ke alamat</p>
                             </div>
                         </label>
                     </div>
-                    @error('pickup_method') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                    @error('pickup_method') <p class="mt-1 text-xs text-[#D37897]">{{ $message }}</p> @enderror
                 </div>
 
                 <div id="address-section" class="{{ old('pickup_method') != 'delivery' ? 'hidden' : '' }}">
-                    <label for="delivery_address" class="block text-sm font-semibold text-slate-600 mb-1.5">Alamat Tujuan *</label>
+                    <label for="delivery_address" class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-2">Alamat Tujuan *</label>
                     <textarea name="delivery_address" id="delivery_address" rows="3" placeholder="Alamat lengkap pengiriman..."
-                              class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50">{{ old('delivery_address', $user->address) }}</textarea>
-                    @error('delivery_address') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                              class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent placeholder-[#C9A9B4] outline-none transition-colors resize-none">{{ old('delivery_address', $user->address) }}</textarea>
+                    @error('delivery_address') <p class="mt-1 text-xs text-[#D37897]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label for="special_note" class="block text-sm font-semibold text-slate-600 mb-1.5">Catatan Khusus</label>
+                    <label for="special_note" class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-2">Catatan Khusus</label>
                     <textarea name="special_note" id="special_note" rows="2" placeholder="Warna bunga, tulisan kartu, dll. (opsional)"
-                              class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50">{{ old('special_note') }}</textarea>
-                    @error('special_note') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                              class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent placeholder-[#C9A9B4] outline-none transition-colors resize-none">{{ old('special_note') }}</textarea>
+                    @error('special_note') <p class="mt-1 text-xs text-[#D37897]">{{ $message }}</p> @enderror
                 </div>
 
                 <div>
-                    <label for="payment_proof" class="block text-sm font-semibold text-slate-600 mb-1.5">Bukti Pembayaran *</label>
+                    <label for="payment_proof" class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-2">Bukti Pembayaran *</label>
                     <input type="file" name="payment_proof" id="payment_proof" accept="image/jpg,image/jpeg,image/png,image/webp" required
-                           class="block w-full border border-rose-200 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-2 focus:ring-rose-300 focus:border-rose-300 text-sm bg-rose-50/50 file:mr-3 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-rose-100 file:text-rose-700 hover:file:bg-rose-200">
-                    <p class="mt-1.5 text-xs text-slate-400">Upload screenshot bukti transfer (jpg/png/webp, maks 5MB)</p>
-                    @error('payment_proof') <p class="mt-1 text-sm text-rose-600">{{ $message }}</p> @enderror
+                           class="block w-full text-sm text-[#33413A] file:border file:border-[#EFD3DE] file:px-4 file:py-2 file:text-sm file:tracking-wide file:bg-transparent file:text-[#33413A] hover:file:bg-[#F9DEE5] file:transition-colors file:cursor-pointer file:mr-4 transition-colors">
+                    <p class="mt-1.5 text-xs text-[#C9A9B4]">Upload screenshot bukti transfer (jpg/png/webp, maks 5MB)</p>
+                    @error('payment_proof') <p class="mt-1 text-xs text-[#D37897]">{{ $message }}</p> @enderror
                 </div>
 
-                <div id="form-stock-warning" class="hidden p-4 bg-red-50 border border-red-200 rounded-2xl text-sm text-red-700 font-medium">
+                <div id="form-stock-warning" class="hidden p-4 border border-red-200 bg-red-50 text-sm text-red-700 font-medium">
                 </div>
 
                 <div class="flex space-x-3">
-                    <a href="{{ route('customer.cart') }}" class="flex-1 text-center px-4 py-3.5 border border-rose-200 rounded-xl text-slate-600 hover:bg-rose-50 font-semibold transition text-sm">
+                    <a href="{{ route('customer.cart') }}"
+                       class="flex-1 text-center px-4 py-3 border border-[#EFD3DE] text-[#6E8577] hover:border-[#D37897] hover:text-[#33413A] text-sm tracking-wide transition-colors duration-200">
                         Batal
                     </a>
-                    <button type="submit" id="submit-btn" class="flex-1 px-4 py-3.5 bg-rose-400 text-white rounded-xl hover:bg-rose-500 font-semibold transition-all duration-200 shadow-sm hover:shadow-md text-sm">
+                    <button type="submit" id="submit-btn"
+                            class="flex-1 px-4 py-3 border border-[#D37897] bg-[#D37897] text-white hover:bg-[#D37897]/90 text-sm tracking-wide transition-colors duration-200">
                         Pesan Sekarang
                     </button>
                 </div>
@@ -158,8 +176,7 @@ async function loadSummary() {
         summaryEl.innerHTML = '';
         emptyEl.classList.remove('hidden');
         footerEl.classList.add('hidden');
-        submitBtn.classList.add('pointer-events-none', 'bg-slate-300');
-        submitBtn.classList.remove('bg-rose-400');
+        submitBtn.classList.add('pointer-events-none', 'opacity-50');
         return;
     }
 
@@ -170,25 +187,38 @@ async function loadSummary() {
         if (!opts) return '';
         const entries = Object.entries(opts);
         if (entries.length === 0) return '';
-        return '<div class="mt-1 space-y-0.5">' + entries.map(function(kv) {
+        return entries.map(function(kv) {
             const val = Array.isArray(kv[1]) ? kv[1].join(', ') : kv[1];
-            return '<span class="text-xs text-gray-400"><b>' + kv[0] + ':</b> ' + val + '</span>';
-        }).join('') + '</div>';
+            return '<div>' +
+                '<p class="text-[10px] tracking-[0.15em] uppercase text-[#6E8577]">' + kv[0] + '</p>' +
+                '<p class="text-xs text-[#33413A]">' + val + '</p>' +
+                '</div>';
+        }).join('');
     }
 
     summaryEl.innerHTML = items.map(function(item) {
-        return '<div class="flex items-start gap-3" data-summary-key="' + item._key + '">\
-            <div class="w-12 h-12 flex-shrink-0 bg-gradient-to-br from-rose-50 to-pink-50 rounded-lg overflow-hidden">\
+        var hasOpts = item.custom_options && Object.keys(item.custom_options).length > 0;
+        return '<div class="flex items-start gap-3 pb-3 border-b border-[#EFD3DE]/50 last:border-0 last:pb-0" data-summary-key="' + item._key + '">\
+            <div class="w-10 h-10 flex-shrink-0 overflow-hidden bg-[#F9DEE5]">\
                 ' + (item.image
                     ? '<img src="' + item.image + '" class="w-full h-full object-cover">'
-                    : '<div class="w-full h-full flex items-center justify-center text-lg text-rose-200">\u{1F338}</div>') + '\
+                    : '<div class="w-full h-full flex items-center justify-center text-sm text-[#C9A9B4]">—</div>') + '\
             </div>\
             <div class="flex-1 min-w-0">\
-                <p class="text-sm font-medium text-slate-800 truncate">' + item.name + '</p>\
-                <p class="text-xs text-slate-400">' + item.qty + ' x ' + formatRupiah(item.price) + '</p>\
-                ' + renderSummaryOptions(item.custom_options) + '\
+                <div class="flex items-start gap-1' + (hasOpts ? ' cursor-pointer' : '') + '"' + (hasOpts ? ' onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'.cv\').classList.toggle(\'-rotate-180\')"' : '') + '>\
+                    <div class="min-w-0">\
+                        <p class="text-sm text-[#33413A] truncate">' + item.name + '</p>\
+                        <p class="text-xs text-[#6E8577]">' + item.qty + ' x ' + formatRupiah(item.price) + '</p>\
+                    </div>\
+                    ' + (hasOpts
+                        ? '<svg class="cv w-2.5 h-2.5 mt-0.5 flex-shrink-0 text-[#C9A9B4] transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>'
+                        : '') + '\
+                </div>\
+                ' + (hasOpts
+                    ? '<div class="hidden mt-2 space-y-1 pl-2.5 border-l border-[#EFD3DE]">' + renderSummaryOptions(item.custom_options) + '</div>'
+                    : '') + '\
             </div>\
-            <p class="text-sm font-bold text-slate-800">' + formatRupiah(item.price * item.qty) + '</p>\
+            <p class="text-sm font-medium text-[#33413A]">' + formatRupiah(item.price * item.qty) + '</p>\
         </div>';
     }).join('');
 
@@ -217,14 +247,14 @@ async function loadSummary() {
 
             if (!stock || !stock.is_active || item.qty > stock.stock) {
                 cartHasStockIssue = true;
-                el.classList.add('opacity-50');
+                el.classList.add('opacity-40');
                 if (stock && stock.stock > 0 && item.qty > stock.stock) {
                     outOfStockNames.push(item.name + ' (sisa ' + stock.stock + ')');
                 } else {
                     outOfStockNames.push(item.name + ' (habis)');
                 }
             } else {
-                el.classList.remove('opacity-50');
+                el.classList.remove('opacity-40');
             }
         });
 
@@ -232,12 +262,12 @@ async function loadSummary() {
         if (cartHasStockIssue) {
             warningEl.textContent = 'Stok tidak mencukupi: ' + outOfStockNames.join(', ');
             warningEl.classList.remove('hidden');
-            submitBtn.classList.add('pointer-events-none', 'bg-slate-300');
-            submitBtn.classList.remove('bg-rose-400');
+            submitBtn.classList.add('pointer-events-none', 'opacity-50');
+            submitBtn.classList.remove('opacity-100');
         } else {
             warningEl.classList.add('hidden');
-            submitBtn.classList.remove('pointer-events-none', 'bg-slate-300');
-            submitBtn.classList.add('bg-rose-400');
+            submitBtn.classList.remove('pointer-events-none', 'opacity-50');
+            submitBtn.classList.add('opacity-100');
         }
 
         const total = items.reduce((sum, item) => {

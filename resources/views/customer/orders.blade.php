@@ -32,18 +32,27 @@
                     <div class="space-y-1.5 text-sm text-slate-500 mb-4">
                         @foreach($order->items as $item)
                             <div class="flex justify-between">
-                                <div>
-                                    <span>{{ $item->product_name_snapshot }} × {{ $item->quantity }}</span>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-start gap-1{{ $item->custom_options ? ' cursor-pointer' : '' }}"{{ $item->custom_options ? ' onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'.cv\').classList.toggle(\'-rotate-180\')"' : '' }}>
+                                        <span class="truncate">{{ $item->product_name_snapshot }} × {{ $item->quantity }}</span>
+                                        @if($item->custom_options)
+                                            <svg class="cv w-2.5 h-2.5 mt-0.5 flex-shrink-0 text-[#C9A9B4] transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        @endif
+                                    </div>
                                     @if($item->custom_options)
-                                        <div class="text-xs text-gray-400 mt-0.5">
+                                        <div class="hidden mt-1.5 space-y-1 pl-2.5 border-l border-[#EFD3DE]">
                                             @foreach($item->custom_options as $label => $value)
-                                                <span>{{ $label }}: {{ is_array($value) ? implode(', ', $value) : $value }}</span>
-                                                @if(!$loop->last) · @endif
+                                                <div>
+                                                    <p class="text-[10px] tracking-[0.15em] uppercase text-[#6E8577]">{{ $label }}</p>
+                                                    <p class="text-xs text-[#33413A]">{{ is_array($value) ? implode(', ', $value) : $value }}</p>
+                                                </div>
                                             @endforeach
                                         </div>
                                     @endif
                                 </div>
-                                <span class="font-medium text-slate-700 whitespace-nowrap ml-3">{{ $item->formatted_subtotal }}</span>
+                                <span class="font-medium text-slate-700 whitespace-nowrap ml-3 flex-shrink-0">{{ $item->formatted_subtotal }}</span>
                             </div>
                         @endforeach
                     </div>

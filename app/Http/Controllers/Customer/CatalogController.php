@@ -36,7 +36,11 @@ class CatalogController extends Controller
 
         $products = $query->latest()->paginate(12);
 
-        $categories = Category::orderBy('name')->get(['id', 'name', 'slug']);
+        if ($request->ajax()) {
+            return view('customer.catalog-products', compact('products'));
+        }
+
+        $categories = Category::with('fields')->orderBy('name')->get(['id', 'name', 'slug']);
 
         return view('customer.catalog', compact('products', 'categories'));
     }

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app', ['hideNav' => true])
 
 @php
     $statusFlow = [
@@ -104,20 +104,31 @@
         <h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-4">Item Pesanan</h2>
         <div class="divide-y divide-rose-50">
             @foreach($order->items as $item)
-                <div class="flex items-center justify-between py-3.5 first:pt-0 last:pb-0">
-                    <div>
-                        <p class="text-sm font-semibold text-slate-800">{{ $item->product_name_snapshot }}</p>
-                        <p class="text-xs text-slate-400 mt-0.5">Rp {{ number_format($item->price_snapshot, 0, ',', '.') }} × {{ $item->quantity }}</p>
+                <div class="flex items-start justify-between py-3.5 first:pt-0 last:pb-0">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-start gap-1{{ $item->custom_options ? ' cursor-pointer' : '' }}"{{ $item->custom_options ? ' onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'.cv\').classList.toggle(\'-rotate-180\')"' : '' }}>
+                            <div class="min-w-0">
+                                <p class="text-sm font-semibold text-slate-800 truncate">{{ $item->product_name_snapshot }}</p>
+                                <p class="text-xs text-slate-400 mt-0.5">Rp {{ number_format($item->price_snapshot, 0, ',', '.') }} × {{ $item->quantity }}</p>
+                            </div>
+                            @if($item->custom_options)
+                                <svg class="cv w-2.5 h-2.5 mt-1 flex-shrink-0 text-[#C9A9B4] transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            @endif
+                        </div>
                         @if($item->custom_options)
-                            <div class="mt-1 space-y-0.5">
+                            <div class="hidden mt-2 space-y-1 pl-2.5 border-l border-[#EFD3DE]">
                                 @foreach($item->custom_options as $label => $value)
-                                    <span class="text-xs text-gray-500"><b>{{ $label }}:</b> {{ is_array($value) ? implode(', ', $value) : $value }}</span>
-                                    @if(!$loop->last)<br>@endif
+                                    <div>
+                                        <p class="text-[10px] tracking-[0.15em] uppercase text-[#6E8577]">{{ $label }}</p>
+                                        <p class="text-xs text-[#33413A]">{{ is_array($value) ? implode(', ', $value) : $value }}</p>
+                                    </div>
                                 @endforeach
                             </div>
                         @endif
                     </div>
-                    <p class="text-sm font-bold text-slate-800">{{ $item->formatted_subtotal }}</p>
+                    <p class="text-sm font-bold text-slate-800 flex-shrink-0 ml-3">{{ $item->formatted_subtotal }}</p>
                 </div>
             @endforeach
         </div>

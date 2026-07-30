@@ -2,39 +2,41 @@
 
 @section('content')
 <div class="max-w-2xl">
-    <h1 class="text-2xl font-bold text-pink-800 mb-6">Tambah Kategori Baru</h1>
+    <h1 class="text-2xl font-medium text-[#33413A] mb-6">Tambah Kategori Baru</h1>
 
-    <div class="bg-white shadow-sm rounded-lg border border-pink-200 p-6">
+    <div class="border border-[#EFD3DE] p-6">
         <form action="{{ route('admin.categories.store') }}" method="POST">
             @csrf
 
-            <div class="space-y-4">
+            <div class="space-y-6">
                 <div>
-                    <label for="name" class="block text-sm font-medium text-pink-700">Nama Kategori *</label>
+                    <label for="name" class="block text-[11px] tracking-[0.2em] uppercase text-[#6E8577] mb-2">Nama Kategori *</label>
                     <input type="text" name="name" id="name" value="{{ old('name') }}" required
-                           class="mt-1 block w-full border border-pink-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"
+                           class="w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent outline-none transition-colors placeholder-[#C9A9B4]"
                            placeholder="Contoh: Ulang Tahun, Mawar, dll">
-                    @error('name') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                    @error('name') <p class="text-xs text-[#D37897] mt-1">{{ $message }}</p> @enderror
                 </div>
             </div>
 
             {{-- Form Questions Builder --}}
             <div class="mt-8">
-                <div class="flex items-center justify-between mb-3">
-                    <h2 class="text-lg font-semibold text-pink-800">Pertanyaan Form Pesanan</h2>
-                    <button type="button" onclick="addField()" class="px-3 py-1.5 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 font-medium text-sm transition">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-sm font-medium text-[#33413A]">Pertanyaan Form Pesanan</h2>
+                        <p class="text-xs text-[#6E8577] mt-0.5">Pertanyaan berikut akan muncul saat pelanggan memesan produk dari kategori ini.</p>
+                    </div>
+                    <button type="button" onclick="addField()" class="border border-[#EFD3DE] text-[#6E8577] hover:border-[#D37897] hover:text-[#D37897] text-xs tracking-wide transition-colors duration-200 px-3 py-1.5">
                         + Tambah Pertanyaan
                     </button>
                 </div>
-                <p class="text-sm text-pink-500 mb-4">Pertanyaan berikut akan muncul saat pelanggan memesan produk dari kategori ini.</p>
                 <div id="fields-container" class="space-y-4"></div>
             </div>
 
-            <div class="mt-6 flex justify-end space-x-3">
-                <a href="{{ route('admin.categories.index') }}" class="px-4 py-2 border border-pink-300 rounded-lg text-pink-700 hover:bg-pink-50 font-medium transition">
+            <div class="mt-8 flex justify-end gap-3">
+                <a href="{{ route('admin.categories.index') }}" class="border border-[#EFD3DE] text-[#6E8577] hover:border-[#D37897] hover:text-[#D37897] text-sm tracking-wide transition-colors duration-200 px-4 py-2">
                     Batal
                 </a>
-                <button type="submit" class="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 font-medium transition shadow-sm">
+                <button type="submit" class="border border-[#D37897] bg-[#D37897] text-white hover:bg-[#D37897]/90 text-sm tracking-wide transition-colors duration-200 px-4 py-2">
                     Simpan Kategori
                 </button>
             </div>
@@ -59,7 +61,7 @@ function addField(data) {
     const container = document.getElementById('fields-container');
     const index = fieldIndex++;
     const div = document.createElement('div');
-    div.className = 'field-item bg-pink-50/50 border border-pink-200 rounded-lg p-4 relative';
+    div.className = 'field-item border border-[#EFD3DE] p-4 relative';
     div.dataset.index = index;
 
     const id = data ? data.id : '';
@@ -71,40 +73,40 @@ function addField(data) {
     div.innerHTML = `
         <input type="hidden" name="fields[${index}][id]" value="${id}">
         <div class="flex items-center justify-between mb-3">
-            <span class="text-sm font-semibold text-pink-700">Pertanyaan #<span class="field-number">${index + 1}</span></span>
-            <button type="button" onclick="removeField(this)" class="text-red-500 hover:text-red-700 text-sm font-medium">Hapus</button>
+            <span class="text-xs tracking-wide text-[#6E8577]">Pertanyaan #<span class="field-number">${index + 1}</span></span>
+            <button type="button" onclick="removeField(this)" class="text-xs tracking-wide text-red-600 border-b border-red-400 pb-0.5 hover:pb-1 transition-all">Hapus</button>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-                <label class="block text-xs font-medium text-pink-600 mb-1">Label Pertanyaan</label>
+                <label class="block text-[10px] tracking-[0.2em] uppercase text-[#6E8577] mb-1.5">Label Pertanyaan</label>
                 <input type="text" name="fields[${index}][label]" value="${label}" required
-                       class="w-full border border-pink-300 rounded-lg py-1.5 px-2.5 text-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                       class="w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-1.5 text-sm bg-transparent outline-none transition-colors placeholder-[#C9A9B4]"
                        placeholder="Contoh: Warna Bunga">
             </div>
             <div>
-                <label class="block text-xs font-medium text-pink-600 mb-1">Tipe Jawaban</label>
+                <label class="block text-[10px] tracking-[0.2em] uppercase text-[#6E8577] mb-1.5">Tipe Jawaban</label>
                 <select name="fields[${index}][type]" onchange="toggleOptions(this)" required
-                        class="w-full border border-pink-300 rounded-lg py-1.5 px-2.5 text-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500">
+                        class="w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-1.5 text-sm bg-transparent outline-none transition-colors">
                     <option value="text" ${type === 'text' ? 'selected' : ''}>Text (isian singkat)</option>
                     <option value="select" ${type === 'select' ? 'selected' : ''}>Select (pilih satu)</option>
                     <option value="checkbox" ${type === 'checkbox' ? 'selected' : ''}>Checkbox (pilih banyak)</option>
                 </select>
             </div>
             <div>
-                <label class="block text-xs font-medium text-pink-600 mb-1">Wajib Diisi</label>
-                <label class="inline-flex items-center mt-1.5 cursor-pointer">
+                <label class="block text-[10px] tracking-[0.2em] uppercase text-[#6E8577] mb-1.5">Wajib Diisi</label>
+                <label class="inline-flex items-center gap-2 mt-2.5 cursor-pointer">
                     <input type="checkbox" name="fields[${index}][is_required]" value="1" ${isRequired ? 'checked' : ''}
-                           class="rounded border-pink-300 text-pink-600 focus:ring-pink-500">
-                    <span class="ml-2 text-sm text-pink-700">Ya, wajib</span>
+                           class="h-4 w-4 text-[#D37897] focus:ring-[#D37897] border-[#EFD3DE] rounded">
+                    <span class="text-sm text-[#33413A]">Ya, wajib</span>
                 </label>
             </div>
         </div>
-        <div class="options-field mt-3 ${type === 'text' ? 'hidden' : ''}">
-            <label class="block text-xs font-medium text-pink-600 mb-1">Pilihan Jawaban</label>
+        <div class="options-field mt-4 ${type === 'text' ? 'hidden' : ''}">
+            <label class="block text-[10px] tracking-[0.2em] uppercase text-[#6E8577] mb-1.5">Pilihan Jawaban</label>
             <input type="text" name="fields[${index}][options]" value="${options}"
-                   class="w-full border border-pink-300 rounded-lg py-1.5 px-2.5 text-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500"
+                   class="w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-1.5 text-sm bg-transparent outline-none transition-colors placeholder-[#C9A9B4]"
                    placeholder="Pisahkan dengan koma, contoh: Merah, Putih, Pink">
-            <p class="text-xs text-pink-400 mt-1">Pisahkan setiap pilihan dengan koma.</p>
+            <p class="text-xs text-[#C9A9B4] mt-1">Pisahkan setiap pilihan dengan koma.</p>
         </div>
     `;
 
