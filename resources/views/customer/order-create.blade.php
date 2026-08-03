@@ -26,18 +26,6 @@
         <p class="text-sm text-[#C9A9B4] mt-1">Periksa kembali pesanan Anda sebelum mengirim.</p>
     </div>
 
-    @if(session('warning'))
-        <div class="mb-5 p-4 border border-[#D9C3B4] text-[#5C6F5E] text-sm">
-            {{ session('warning') }}
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="mb-5 p-4 border border-[#D9C2B4] text-[#D37897] text-sm">
-            {{ session('error') }}
-        </div>
-    @endif
-
     <div class="lg:flex lg:gap-8">
         {{-- Order Summary (JS-rendered from localStorage) --}}
         <div class="lg:w-5/12 mb-8 lg:mb-0">

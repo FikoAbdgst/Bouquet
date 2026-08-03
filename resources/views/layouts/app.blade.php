@@ -84,6 +84,7 @@
         };
         window.updateCartBadges = function() {
             var count = window.CartStorage.count();
+            window._cartBadgeCount = count;
             document.querySelectorAll('.cart-badge-desktop, .cart-badge-mobile').forEach(function(el) {
                 if (count > 0) {
                     el.textContent = count > 99 ? '99+' : count;
@@ -93,9 +94,23 @@
                 }
             });
         };
+
+        function refreshCartBadges() {
+            var count = window.CartStorage.count();
+            if (count !== window._cartBadgeCount) {
+                window.updateCartBadges();
+            }
+        }
+
         window.addEventListener('cart-updated', window.updateCartBadges);
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'cart' || e.key === null) {
+                window.updateCartBadges();
+            }
+        });
         document.addEventListener('DOMContentLoaded', function() {
             window.updateCartBadges();
+            setInterval(refreshCartBadges, 3000);
         });
     </script>
     @stack('styles')
@@ -115,7 +130,7 @@
                         {{-- Left: Brand Logo --}}
                         <div class="flex items-center shrink-0">
                             <a href="{{ route('home') }}" class="flex items-center group">
-                                <img src="{{ asset('images/LOGOTEXT.png') }}" alt="BuketBunga"
+                                <img src="{{ asset('images/LOGOTEXT.png') }}" alt="Ngabuket Bandung"
                                     class="h-6 w-auto group-hover:opacity-80 transition-opacity duration-200">
                             </a>
                         </div>
@@ -154,15 +169,9 @@
                             </a>
 
                             {{-- Auth (desktop) --}}
-                            <div class="hidden md:flex items-center space-x-2">
-                                @auth
-                                    @if (Auth::user()->isCustomer())
-                                        <a href="{{ route('customer.dashboard') }}"
-                                            class="text-[#6E8577] hover:text-[#D37897] font-medium text-sm transition px-3 py-2 rounded-full hover:bg-[#F1F0EA]">
-                                            Dashboard
-                                        </a>
-                                    @endif
-                                    <div class="relative">
+                                <div class="hidden md:flex items-center space-x-2">
+                                    @auth
+                                        <div class="relative">
                                         <button id="user-dropdown-btn" onclick="toggleDropdown()"
                                             class="flex items-center space-x-1 text-[#6E8577] hover:text-[#D37897] transition focus:outline-none px-2 py-1.5 rounded-full hover:bg-[#F1F0EA]">
                                             <span
@@ -237,8 +246,6 @@
                                 <a href="{{ route('customer.orders.index') }}"
                                     class="block py-2.5 px-3 text-[#6E8577] hover:text-[#D37897] hover:bg-[#F1F0EA] rounded-xl font-medium transition">Pesanan
                                     Saya</a>
-                                <a href="{{ route('customer.dashboard') }}"
-                                    class="block py-2.5 px-3 text-[#6E8577] hover:text-[#D37897] hover:bg-[#F1F0EA] rounded-xl font-medium transition">Dashboard</a>
                             @endif
                             <div class="border-t border-[#E7E4DC] pt-3 mt-3">
                                 <div class="flex items-center space-x-3 px-3 py-2">
@@ -271,29 +278,8 @@
         </nav>
     @endif
 
-    {{-- Flash Messages --}}
-    <div class="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8">
-        @if (session('success'))
-            <div class="mb-4 p-4 bg-[#EAF3E8] border border-[#B8C8B0] text-[#5B7A5A] rounded-2xl flex items-center">
-                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm font-medium">{{ session('success') }}</span>
-            </div>
-        @endif
-        @if (session('error'))
-            <div class="mb-4 p-4 bg-[#FBEAEE] border border-[#E9B9C6] text-[#D37897] rounded-2xl flex items-center">
-                <svg class="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd"
-                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                        clip-rule="evenodd" />
-                </svg>
-                <span class="text-sm font-medium">{{ session('error') }}</span>
-            </div>
-        @endif
-    </div>
+    {{-- Global Toasts --}}
+    @include('partials.toasts')
 
     {{-- Main Content --}}
     <main
@@ -303,16 +289,49 @@
 
     {{-- Footer --}}
     <footer class="bg-white border-t border-[#E7E4DC] mt-auto">
-        <div class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-8">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {{-- Brand --}}
                 <div>
-                    <span class="text-sm font-semibold tracking-wide text-[#D37897]">BuketBunga</span>
+                    <a href="{{ route('home') }}" class="inline-block">
+                        <img src="{{ asset('images/LOGO.png') }}" alt="Ngabuket Bandung" class="h-12 w-auto">
+                    </a>
+                    <p class="text-sm text-[#6E8577] mt-3 leading-relaxed max-w-xs">
+                        Buket bunga cantik untuk momen spesial Anda. Pesan dengan mudah, dikirim segar dari Bandung.
+                    </p>
                 </div>
-                <p class="text-sm text-[#6E8577]">&copy; {{ date('Y') }} BuketBunga. Dibuat untuk momen spesial
-                    Anda.</p>
-                <div class="flex space-x-6 text-sm text-[#6E8577]">
-                    <a href="mailto:admin@buketbunga.com" class="hover:text-[#D37897] transition">Kontak</a>
+
+                {{-- Menu --}}
+                <div class="lg:justify-self-center">
+                    <p class="text-[11px] tracking-[0.18em] uppercase text-[#C9A9B4] font-semibold mb-3">Menu</p>
+                    <ul class="space-y-2 text-sm text-[#6E8577]">
+                        <li><a href="{{ route('home') }}" class="hover:text-[#D37897] transition">Beranda</a></li>
+                        <li><a href="{{ route('customer.catalog') }}" class="hover:text-[#D37897] transition">Katalog Bunga</a></li>
+                        <li><a href="{{ route('customer.cart') }}" class="hover:text-[#D37897] transition">Keranjang</a></li>
+                    </ul>
                 </div>
+
+                {{-- Kontak --}}
+                <div class="lg:justify-self-end">
+                    <p class="text-[11px] tracking-[0.18em] uppercase text-[#C9A9B4] font-semibold mb-3">Hubungi Kami</p>
+                    <ul class="space-y-2 text-sm text-[#6E8577]">
+                        <li>
+                            <a href="https://instagram.com/ngabuketbdg" target="_blank" rel="noopener" class="hover:text-[#D37897] transition">
+                                Instagram @ngabuketbdg
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://wa.me/{{ config('app.wa_admin_number') }}" target="_blank" rel="noopener" class="hover:text-[#D37897] transition">
+                                WhatsApp
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-[#E7E4DC] mt-8 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <p class="text-xs text-[#C9A9B4]">&copy; {{ date('Y') }} Ngabuket Bandung. Hak cipta dilindungi.</p>
+                <p class="text-xs text-[#C9A9B4]">Dibuat dengan <span class="text-[#D37897]">&hearts;</span> untuk momen spesial Anda</p>
             </div>
         </div>
     </footer>

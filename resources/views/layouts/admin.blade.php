@@ -101,17 +101,7 @@
         {{-- Main Content --}}
         <div class="flex-1 min-w-0">
             <div class="p-6">
-                {{-- Flash Messages --}}
-                @if(session('success'))
-                    <div class="mb-4 p-4 border border-[#B8C8B0] text-[#5C6F5E] text-sm flex items-center">
-                        {{ session('success') }}
-                    </div>
-                @endif
-                @if(session('error'))
-                    <div class="mb-4 p-4 border border-[#EFD3DE] text-[#D37897] text-sm flex items-center">
-                        {{ session('error') }}
-                    </div>
-                @endif
+                @include('partials.toasts')
 
                 @yield('content')
             </div>

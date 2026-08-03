@@ -267,6 +267,9 @@
                 showConfirmModal('Hapus "' + name + '" dari keranjang?', function() {
                     CartStorage.removeItem(key);
                     renderCart();
+                    if (window.BuketToast && typeof window.BuketToast.show === 'function') {
+                        window.BuketToast.show('success', name + ' dihapus dari keranjang');
+                    }
                 });
             }
         });
@@ -285,6 +288,9 @@
             showConfirmModal('Kosongkan seluruh keranjang?', function() {
                 CartStorage.clear();
                 renderCart();
+                if (window.BuketToast && typeof window.BuketToast.show === 'function') {
+                    window.BuketToast.show('info', 'Keranjang dikosongkan');
+                }
             });
         }
 

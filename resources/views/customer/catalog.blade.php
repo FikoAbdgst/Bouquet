@@ -565,23 +565,9 @@
 
             closeQuickAdd();
 
-            var fb = document.getElementById('cart-feedback');
-            if (!fb) {
-                fb = document.createElement('p');
-                fb.id = 'cart-feedback';
-                fb.className =
-                    'fixed bottom-6 right-6 z-50 bg-[#33413A] text-white text-sm px-5 py-3 border border-[#E7E4DC] shadow-lg transition-opacity duration-300';
-                document.body.appendChild(fb);
+            if (window.BuketToast && typeof window.BuketToast.show === 'function') {
+                window.BuketToast.show('success', quickAddProduct.name + ' berhasil ditambahkan ke keranjang');
             }
-            fb.textContent = '✓ ' + quickAddProduct.name + ' ditambahkan ke keranjang!';
-            fb.classList.remove('hidden', 'opacity-0');
-            fb.classList.add('opacity-100');
-            setTimeout(function() {
-                fb.classList.add('opacity-0');
-                setTimeout(function() {
-                    fb.classList.add('hidden');
-                }, 300);
-            }, 2500);
 
             return false;
         }

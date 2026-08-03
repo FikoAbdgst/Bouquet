@@ -23,6 +23,7 @@
     </div>
     <div class="max-w-md w-full">
         <div class="text-center mb-10">
+            <img src="{{ asset('images/LOGO.png') }}" alt="Ngabuket Bandung" class="h-12 sm:h-14 w-auto mx-auto mb-6">
             <h1 class="font-display text-2xl sm:text-3xl font-medium text-[#33413A]">Buat Akun Baru</h1>
             <p class="text-sm text-[#6E8577] mt-2">
                 Sudah punya akun?

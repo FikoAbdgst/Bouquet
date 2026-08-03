@@ -85,7 +85,6 @@
                             class="block w-full text-center border border-[#D37897] hover:bg-[#D37897] hover:text-white text-[#33413A] text-sm tracking-wide py-3 transition-colors duration-200">
                         Tambah ke Keranjang
                     </button>
-                    <p id="cart-feedback" class="text-sm text-[#5C6F5E] font-medium hidden"></p>
                 @else
                     <div class="block w-full text-center border border-[#EFD3DE] text-[#C9A9B4] text-sm tracking-wide py-3 cursor-not-allowed">
                         Stok Habis
@@ -508,10 +507,9 @@ function addToCartWithOptions(event) {
 
     closeModal();
 
-    var fb = document.getElementById('cart-feedback');
-    fb.textContent = 'Ditambahkan ke keranjang!';
-    fb.classList.remove('hidden');
-    setTimeout(function() { fb.classList.add('hidden'); }, 2500);
+    if (window.BuketToast && typeof window.BuketToast.show === 'function') {
+        window.BuketToast.show('success', @json($product->name) + ' berhasil ditambahkan ke keranjang');
+    }
 
     return false;
 }

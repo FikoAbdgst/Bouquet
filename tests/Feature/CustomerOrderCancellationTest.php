@@ -173,4 +173,38 @@ class CustomerOrderCancellationTest extends TestCase
             ->assertViewIs('customer.orders-list')
             ->assertSee($order->order_code);
     }
+
+    public function test_flash_message_renders_as_global_toast(): void
+    {
+        $customer = $this->customer();
+        $product = $this->product();
+        $this->makeOrder($customer, $product, 'menunggu_konfirmasi');
+
+        $response = $this->actingAs($customer)
+            ->withSession(['success' => 'Pesanan berhasil dibuat!'])
+            ->get(route('customer.orders.index'));
+
+        $response->assertOk()
+            ->assertSee('data-toast="success"', false)
+            ->assertSee('Pesanan berhasil dibuat!');
+    }
+
+    public function test_bukettoast_api_is_available_on_customer_and_admin_pages(): void
+    {
+        $customer = $this->customer();
+        $product = $this->product();
+        $this->makeOrder($customer, $product, 'menunggu_konfirmasi');
+
+        $customerResponse = $this->actingAs($customer)->get(route('customer.orders.index'));
+        $customerResponse->assertOk()
+            ->assertSee('id="toast-container"', false)
+            ->assertSee('window.BuketToast', false)
+            ->assertSee('show: function', false);
+
+        $admin = User::factory()->admin()->create();
+        $adminResponse = $this->actingAs($admin)->get(route('admin.dashboard'));
+        $adminResponse->assertOk()
+            ->assertSee('id="toast-container"', false)
+            ->assertSee('window.BuketToast', false);
+    }
 }
