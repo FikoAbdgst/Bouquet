@@ -32,8 +32,9 @@
                                 data-price="{{ $product->price }}"
                                 data-image="{{ $product->primaryImage ? Storage::url($product->primaryImage->image_url) : '' }}"
                                 data-catid="{{ $catId ?? '' }}"
+                                data-stock="{{ $product->stock }}"
                                 onclick="openQuickAdd(this)"
-                                class="mt-4 block w-full text-center border border-[#D37897] hover:bg-[#457359] hover:text-white text-[#33413A] text-sm tracking-wide py-2.5 transition-colors duration-200">
+                                class="mt-4 block w-full text-center border border-[#D37897] hover:bg-[#D37897] hover:text-white text-[#33413A] text-sm tracking-wide py-2.5 transition-colors duration-200">
                             Tambah ke Keranjang
                         </button>
                     @else

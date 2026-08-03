@@ -38,9 +38,9 @@ class OrderController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('order_code', 'like', '%' . $request->search . '%')
-                  ->orWhere('orderer_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('orderer_phone', 'like', '%' . $request->search . '%');
+                $q->where('order_code', 'like', '%'.$request->search.'%')
+                    ->orWhere('orderer_name', 'like', '%'.$request->search.'%')
+                    ->orWhere('orderer_phone', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -64,7 +64,25 @@ class OrderController extends Controller
     {
         $order->update(['payment_verified' => true]);
 
-        return back()->with('success', 'Pembayaran untuk pesanan ' . $order->order_code . ' berhasil diverifikasi.');
+        return back()->with('success', 'Pembayaran untuk pesanan '.$order->order_code.' berhasil diverifikasi.');
+    }
+
+    public function toggleCancelable(Request $request, Order $order)
+    {
+        $validated = $request->validate([
+            'allow_customer_cancel' => ['nullable', 'boolean'],
+        ]);
+
+        $order->update([
+            'allow_customer_cancel' => ! empty($validated['allow_customer_cancel']),
+        ]);
+
+        return back()->with(
+            'success',
+            $order->allow_customer_cancel
+                ? 'Pelanggan diizinkan membatalkan pesanan '.$order->order_code.' saat status Dikonfirmasi.'
+                : 'Pembatalan oleh pelanggan untuk '.$order->order_code.' dinonaktifkan.'
+        );
     }
 
     public function updateNote(Request $request, Order $order)
@@ -101,7 +119,7 @@ class OrderController extends Controller
             }
 
             if ($newIndex !== $currentIndex + 1) {
-                return back()->with('error', 'Perubahan status harus berurutan. Status saat ini: ' . self::STATUS_LABELS[$currentStatus] . '. Status yang diizinkan berikutnya: ' . (self::STATUS_ORDER[$currentIndex + 1] ?? '—') . '.');
+                return back()->with('error', 'Perubahan status harus berurutan. Status saat ini: '.self::STATUS_LABELS[$currentStatus].'. Status yang diizinkan berikutnya: '.(self::STATUS_ORDER[$currentIndex + 1] ?? '—').'.');
             }
         }
 
@@ -120,10 +138,11 @@ class OrderController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Status pesanan berhasil diubah menjadi: ' . self::STATUS_LABELS[$newStatus]);
+            return back()->with('success', 'Status pesanan berhasil diubah menjadi: '.self::STATUS_LABELS[$newStatus]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal mengubah status: ' . $e->getMessage());
+
+            return back()->with('error', 'Gagal mengubah status: '.$e->getMessage());
         }
     }
 }

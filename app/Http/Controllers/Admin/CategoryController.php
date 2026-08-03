@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\CategoryField;
+use App\Models\CategoryFieldOption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -27,8 +29,10 @@ class CategoryController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:categories,name'],
             'fields' => ['nullable', 'array'],
             'fields.*.label' => ['required', 'string', 'max:255'],
-            'fields.*.type' => ['required', 'in:text,select,checkbox'],
-            'fields.*.options' => ['nullable', 'string', 'max:1000'],
+            'fields.*.type' => ['required', 'in:text,select,checkbox,file'],
+            'fields.*.options' => ['nullable', 'array'],
+            'fields.*.options.*.name' => ['required', 'string', 'max:255'],
+            'fields.*.options.*.price' => ['nullable', 'integer', 'min:0'],
             'fields.*.is_required' => ['nullable', 'boolean'],
         ]);
 
@@ -37,7 +41,7 @@ class CategoryController extends Controller
             'slug' => Str::slug($validated['name']),
         ]);
 
-        if (!empty($validated['fields'])) {
+        if (! empty($validated['fields'])) {
             $this->syncFields($category, $validated['fields']);
         }
 
@@ -47,7 +51,7 @@ class CategoryController extends Controller
 
     public function edit(Category $category)
     {
-        $category->load('fields');
+        $category->load('fields.fieldOptions');
 
         return view('admin.categories.edit', compact('category'));
     }
@@ -55,11 +59,13 @@ class CategoryController extends Controller
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255', 'unique:categories,name,' . $category->id],
+            'name' => ['required', 'string', 'max:255', 'unique:categories,name,'.$category->id],
             'fields' => ['nullable', 'array'],
             'fields.*.label' => ['required', 'string', 'max:255'],
-            'fields.*.type' => ['required', 'in:text,select,checkbox'],
-            'fields.*.options' => ['nullable', 'string', 'max:1000'],
+            'fields.*.type' => ['required', 'in:text,select,checkbox,file'],
+            'fields.*.options' => ['nullable', 'array'],
+            'fields.*.options.*.name' => ['required', 'string', 'max:255'],
+            'fields.*.options.*.price' => ['nullable', 'integer', 'min:0'],
             'fields.*.is_required' => ['nullable', 'boolean'],
         ]);
 
@@ -80,7 +86,7 @@ class CategoryController extends Controller
 
         if (in_array($category->name, $coreCategories)) {
             return redirect()->route('admin.categories.index')
-                ->with('error', 'Kategori "' . $category->name . '" adalah kategori inti dan tidak dapat dihapus.');
+                ->with('error', 'Kategori "'.$category->name.'" adalah kategori inti dan tidak dapat dihapus.');
         }
 
         $productsCount = $category->products()->count();
@@ -107,8 +113,8 @@ class CategoryController extends Controller
             $data = [
                 'label' => $fieldData['label'],
                 'type' => $fieldData['type'],
-                'options' => in_array($fieldData['type'], ['select', 'checkbox']) ? ($fieldData['options'] ?? null) : null,
-                'is_required' => !empty($fieldData['is_required']),
+                'options' => null,
+                'is_required' => ! empty($fieldData['is_required']),
             ];
 
             if ($fieldId && $field = $category->fields()->find($fieldId)) {
@@ -118,8 +124,39 @@ class CategoryController extends Controller
                 $field = $category->fields()->create($data);
                 $keepIds[] = $field->id;
             }
+
+            if (in_array($fieldData['type'], ['select', 'checkbox']) && !empty($fieldData['options'])) {
+                $this->syncFieldOptions($field, $fieldData['options']);
+            } else {
+                $field->fieldOptions()->delete();
+            }
         }
 
         $category->fields()->whereNotIn('id', $keepIds)->delete();
+    }
+
+    private function syncFieldOptions(CategoryField $field, array $options): void
+    {
+        $keepOptionIds = [];
+
+        foreach ($options as $optData) {
+            if (empty($optData['name'])) continue;
+
+            $optId = $optData['id'] ?? null;
+            $optPayload = [
+                'name' => $optData['name'],
+                'price' => (int) ($optData['price'] ?? 0),
+            ];
+
+            if ($optId && $option = $field->fieldOptions()->find($optId)) {
+                $option->update($optPayload);
+                $keepOptionIds[] = $option->id;
+            } else {
+                $option = $field->fieldOptions()->create($optPayload);
+                $keepOptionIds[] = $option->id;
+            }
+        }
+
+        $field->fieldOptions()->whereNotIn('id', $keepOptionIds)->delete();
     }
 }

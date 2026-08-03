@@ -40,7 +40,7 @@ class CatalogController extends Controller
             return view('customer.catalog-products', compact('products'));
         }
 
-        $categories = Category::with('fields')->orderBy('name')->get(['id', 'name', 'slug']);
+        $categories = Category::with('fields.fieldOptions')->orderBy('name')->get(['id', 'name', 'slug']);
 
         return view('customer.catalog', compact('products', 'categories'));
     }
@@ -51,7 +51,7 @@ class CatalogController extends Controller
             abort(404);
         }
 
-        $product->load('images', 'productCategory.fields');
+        $product->load('images', 'productCategory.fields.fieldOptions');
 
         return view('customer.product-detail', compact('product'));
     }

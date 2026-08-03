@@ -89,7 +89,7 @@
                                     <div class="w-12 h-12 border border-[#EFD3DE] flex items-center justify-center text-xs text-[#C9A9B4] flex-shrink-0 mt-0.5">—</div>
                                 @endif
                                 <div class="min-w-0 flex-1">
-                                    <div class="flex items-start gap-1{{ $item->custom_options ? ' cursor-pointer' : '' }}"{{ $item->custom_options ? ' onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'.cv\').classList.toggle(\'-rotate-180\')"' : '' }}>
+                                    <div class="flex items-start gap-1{{ $item->custom_options ? ' cursor-pointer' : '' }}"{!! $item->custom_options ? ' onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'.cv\').classList.toggle(\'-rotate-180\')"' : '' !!}>
                                         <div class="min-w-0">
                                             <p class="text-sm text-[#33413A] truncate">{{ $item->product_name_snapshot }}</p>
                                             <p class="text-xs text-[#6E8577]">Rp {{ number_format($item->price_snapshot, 0, ',', '.') }} &times; {{ $item->quantity }}</p>
@@ -105,7 +105,14 @@
                                             @foreach($item->custom_options as $label => $value)
                                                 <div>
                                                     <p class="text-[10px] tracking-[0.15em] uppercase text-[#6E8577]">{{ $label }}</p>
-                                                    <p class="text-xs text-[#33413A]">{{ is_array($value) ? implode(', ', $value) : $value }}</p>
+                                                    @php $isFile = is_custom_option_file($value); @endphp
+                                                    @if($isFile)
+                                                        <a href="{{ Storage::url(get_custom_option_file_path($value)) }}" target="_blank" class="inline-block mt-1">
+                                                            <img src="{{ Storage::url(get_custom_option_file_path($value)) }}" alt="Referensi" class="w-16 h-16 object-cover border border-[#EFD3DE] hover:opacity-80 transition">
+                                                        </a>
+                                                    @else
+                                                        <p class="text-xs text-[#33413A]">{{ get_custom_option_display($value) }}</p>
+                                                    @endif
                                                 </div>
                                             @endforeach
                                         </div>
@@ -225,6 +232,22 @@
                                 class="w-full border border-red-500 text-red-600 hover:bg-red-50 text-sm tracking-wide transition-colors duration-200 px-4 py-2">
                             Batalkan Pesanan
                         </button>
+                    </form>
+                </div>
+            @endif
+
+            {{-- Pembatalan oleh Pelanggan --}}
+            @if($order->status === 'dikonfirmasi')
+                <div class="border border-[#EFD3DE] p-5">
+                    <h2 class="text-sm font-medium text-[#33413A] mb-2">Pembatalan oleh Pelanggan</h2>
+                    <p class="text-xs text-[#6E8577] mb-4">Pelanggan dapat membatalkan pesanan sendiri saat status <b>Dikonfirmasi</b> hanya jika diizinkan di sini. (Saat <b>Menunggu Konfirmasi</b>, pembatalan selalu diperbolehkan.)</p>
+                    <form action="{{ route('admin.orders.cancelable', $order) }}" method="POST">
+                        @csrf
+                        @method('PATCH')
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="allow_customer_cancel" value="1" {{ $order->allow_customer_cancel ? 'checked' : '' }} class="w-4 h-4 accent-[#D37897]" onchange="this.form.submit()">
+                            <span class="text-sm text-[#33413A]">Izinkan pelanggan membatalkan</span>
+                        </label>
                     </form>
                 </div>
             @endif

@@ -61,7 +61,7 @@ function addField(data) {
     const id = data ? data.id : '';
     const label = data ? data.label : '';
     const type = data ? data.type : 'text';
-    const options = data ? (data.options || '') : '';
+    const options = data ? (data.options || data.field_options || []) : [];
     const isRequired = data ? data.is_required : false;
 
     div.innerHTML = `
@@ -84,6 +84,7 @@ function addField(data) {
                     <option value="text" ${type === 'text' ? 'selected' : ''}>Text (isian singkat)</option>
                     <option value="select" ${type === 'select' ? 'selected' : ''}>Select (pilih satu)</option>
                     <option value="checkbox" ${type === 'checkbox' ? 'selected' : ''}>Checkbox (pilih banyak)</option>
+                    <option value="file" ${type === 'file' ? 'selected' : ''}>File (upload gambar)</option>
                 </select>
             </div>
             <div>
@@ -95,17 +96,50 @@ function addField(data) {
                 </label>
             </div>
         </div>
-        <div class="options-field mt-4 ${type === 'text' ? 'hidden' : ''}">
-            <label class="block text-[10px] tracking-[0.2em] uppercase text-[#6E8577] mb-1.5">Pilihan Jawaban</label>
-            <input type="text" name="fields[${index}][options]" value="${options}"
-                   class="w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-1.5 text-sm bg-transparent outline-none transition-colors placeholder-[#C9A9B4]"
-                   placeholder="Pisahkan dengan koma, contoh: Merah, Putih, Pink">
-            <p class="text-xs text-[#C9A9B4] mt-1">Pisahkan setiap pilihan dengan koma.</p>
+        <div class="options-field mt-4 ${type === 'text' || type === 'file' ? 'hidden' : ''}">
+            <label class="block text-[10px] tracking-[0.2em] uppercase text-[#6E8577] mb-2">Pilihan Jawaban + Harga Tambahan</label>
+            <div class="space-y-2" id="options-container-${index}">
+            </div>
+            <button type="button" onclick="addOption(${index})" class="text-xs text-[#D37897] border border-[#EFD3DE] px-2.5 py-1 mt-2 hover:bg-[#F9DEE5] transition">
+                + Tambah Pilihan
+            </button>
+            <p class="text-xs text-[#C9A9B4] mt-1">Masukkan nama pilihan dan harga tambahan (Rp) jika ada.</p>
         </div>
     `;
 
     container.appendChild(div);
     updateFieldNumbers();
+
+    if (Array.isArray(options)) {
+        options.forEach(function (opt) { addOption(index, opt); });
+    } else if (typeof options === 'string' && options) {
+        options.split(',').forEach(function (opt) {
+            addOption(index, { name: opt.trim(), price: 0 });
+        });
+    }
+}
+
+function addOption(fieldIndex, data) {
+    const container = document.getElementById('options-container-' + fieldIndex);
+    if (!container) return;
+    const optIndex = container.children.length;
+    const id = data && data.id ? data.id : '';
+    const name = data && data.name ? data.name : '';
+    const price = data && data.price != null ? data.price : '';
+
+    const div = document.createElement('div');
+    div.className = 'flex items-center gap-2';
+    div.innerHTML = `
+        <input type="hidden" name="fields[${fieldIndex}][options][${optIndex}][id]" value="${id}">
+        <input type="text" name="fields[${fieldIndex}][options][${optIndex}][name]" value="${name}" required
+               class="flex-1 border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-1.5 text-sm bg-transparent outline-none transition-colors placeholder-[#C9A9B4]"
+               placeholder="Nama pilihan">
+        <input type="number" name="fields[${fieldIndex}][options][${optIndex}][price]" value="${price}" min="0"
+               class="w-28 border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-1.5 text-sm bg-transparent outline-none transition-colors placeholder-[#C9A9B4] text-right"
+               placeholder="+ Rp">
+        <button type="button" onclick="this.parentElement.remove()" class="text-xs text-red-500 hover:text-red-700 p-1 flex-shrink-0">&times;</button>
+    `;
+    container.appendChild(div);
 }
 
 function removeField(btn) {
@@ -116,7 +150,7 @@ function removeField(btn) {
 function toggleOptions(select) {
     const container = select.closest('.field-item');
     const optionsField = container.querySelector('.options-field');
-    optionsField.classList.toggle('hidden', select.value === 'text');
+    optionsField.classList.toggle('hidden', select.value === 'text' || select.value === 'file');
 }
 
 function updateFieldNumbers() {
@@ -125,7 +159,12 @@ function updateFieldNumbers() {
 
 document.addEventListener('DOMContentLoaded', function() {
     if (window._existingFields) {
-        window._existingFields.forEach(function(f) { addField(f); });
+        window._existingFields.forEach(function(f) {
+            if (f.field_options) {
+                f.options = f.field_options;
+            }
+            addField(f);
+        });
     }
 });
 </script>

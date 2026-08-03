@@ -57,9 +57,9 @@
 
             <div class="mt-4">
                 @if($product->stock > 0)
-                    <span class="text-sm text-[#5C6F5E]">Stok: {{ $product->stock }} tersedia</span>
+                    <span id="stock-info" class="text-sm text-[#5C6F5E]">Stok: {{ $product->stock }} tersedia</span>
                 @else
-                    <span class="text-sm text-[#C9A9B4]">Stok Habis</span>
+                    <span id="stock-info" class="text-sm text-[#C9A9B4]">Stok Habis</span>
                 @endif
             </div>
 
@@ -82,7 +82,7 @@
                     </div>
 
                     <button type="button" id="btn-add-cart"
-                            class="block w-full text-center border border-[#D37897] hover:bg-[#457359] hover:text-white text-[#33413A] text-sm tracking-wide py-3 transition-colors duration-200">
+                            class="block w-full text-center border border-[#D37897] hover:bg-[#D37897] hover:text-white text-[#33413A] text-sm tracking-wide py-3 transition-colors duration-200">
                         Tambah ke Keranjang
                     </button>
                     <p id="cart-feedback" class="text-sm text-[#5C6F5E] font-medium hidden"></p>
@@ -133,38 +133,73 @@
 
                         @elseif($field->type === 'select')
                             <select name="custom_options[{{ $field->label }}]" {{ $requiredAttr }}
-                                    class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent outline-none transition-colors">
+                                    class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent outline-none transition-colors"
+                                    onchange="updateTotalPrice()">
                                 <option value="">Pilih {{ $field->label }}</option>
-                                @foreach(explode(',', $field->options ?? '') as $option)
-                                    @php $option = trim($option); @endphp
-                                    @if($option)
-                                        <option value="{{ $option }}">{{ $option }}</option>
-                                    @endif
-                                @endforeach
+                                @forelse($field->fieldOptions as $option)
+                                    <option value="{{ $option->name }}" data-option-id="{{ $option->id }}" data-price="{{ $option->price }}">
+                                        {{ $option->name }}@if($option->price > 0) (+Rp {{ number_format($option->price, 0, ',', '.') }})@endif
+                                    </option>
+                                @empty
+                                    @foreach(explode(',', $field->options ?? '') as $option)
+                                        @php $option = trim($option); @endphp
+                                        @if($option)
+                                            <option value="{{ $option }}" data-price="0">{{ $option }}</option>
+                                        @endif
+                                    @endforeach
+                                @endforelse
                             </select>
 
                         @elseif($field->type === 'checkbox')
                             <div class="space-y-2">
-                                @foreach(explode(',', $field->options ?? '') as $option)
-                                    @php $option = trim($option); @endphp
-                                    @if($option)
-                                        <label class="flex items-center space-x-3 p-2.5 border border-[#EFD3DE] cursor-pointer hover:bg-[#F9DEE5] transition">
-                                            <input type="checkbox" name="custom_options[{{ $field->label }}][]" value="{{ $option }}"
-                                                   class="text-[#D37897] focus:ring-[#D37897] rounded">
-                                            <span class="text-sm text-[#33413A]">{{ $option }}</span>
-                                        </label>
-                                    @endif
-                                @endforeach
+                                @forelse($field->fieldOptions as $option)
+                                    <label class="flex items-center space-x-3 p-2.5 border border-[#EFD3DE] cursor-pointer hover:bg-[#F9DEE5] transition">
+                                        <input type="checkbox" name="custom_options[{{ $field->label }}][]" value="{{ $option->name }}"
+                                               data-option-id="{{ $option->id }}" data-price="{{ $option->price }}"
+                                               class="text-[#D37897] focus:ring-[#D37897] rounded" onchange="updateTotalPrice()">
+                                        <span class="text-sm text-[#33413A]">{{ $option->name }}@if($option->price > 0) <span class="text-[#D37897]">(+Rp {{ number_format($option->price, 0, ',', '.') }})</span>@endif</span>
+                                    </label>
+                                @empty
+                                    @foreach(explode(',', $field->options ?? '') as $option)
+                                        @php $option = trim($option); @endphp
+                                        @if($option)
+                                            <label class="flex items-center space-x-3 p-2.5 border border-[#EFD3DE] cursor-pointer hover:bg-[#F9DEE5] transition">
+                                                <input type="checkbox" name="custom_options[{{ $field->label }}][]" value="{{ $option }}"
+                                                       data-price="0"
+                                                       class="text-[#D37897] focus:ring-[#D37897] rounded" onchange="updateTotalPrice()">
+                                                <span class="text-sm text-[#33413A]">{{ $option }}</span>
+                                            </label>
+                                        @endif
+                                    @endforeach
+                                @endforelse
                             </div>
                             @if($field->is_required)
                                 <p class="text-xs text-[#D37897] mt-1 required-checkbox-msg hidden">Pilih setidaknya satu opsi.</p>
                             @endif
+
+                        @elseif($field->type === 'file')
+                            <input type="file" accept="image/jpg,image/jpeg,image/png,image/webp" data-label="{{ $field->label }}"
+                                   class="field-file-input block w-full text-sm text-[#33413A] file:border file:border-[#EFD3DE] file:px-4 file:py-2 file:text-sm file:tracking-wide file:bg-transparent file:text-[#33413A] hover:file:bg-[#F9DEE5] file:transition-colors file:cursor-pointer file:mr-4 transition-colors"
+                                   {{ $field->is_required ? 'required' : '' }}>
+                            <input type="hidden" name="custom_options[{{ $field->label }}]" value="" class="file-uploaded-path">
+                            <div class="file-preview mt-2 hidden">
+                                <div class="flex items-center gap-2">
+                                    <img src="" class="w-14 h-14 object-cover border border-[#EFD3DE]">
+                                    <span class="text-xs text-[#5C6F5E]">Terupload</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-[#C9A9B4] mt-1">Upload gambar referensi (jpg/png/webp, maks 5MB)</p>
                         @endif
                     </div>
                 @endforeach
             @else
                 <p class="text-sm text-[#6E8577] mb-4">Tidak ada opsi kustomisasi untuk produk ini.</p>
             @endif
+
+            <div class="flex justify-between items-center py-3 px-4 bg-[#F9DEE5] mb-4">
+                <span class="text-sm text-[#33413A] font-medium">Total Harga</span>
+                <span id="modal-total-price" class="text-lg font-medium text-[#D37897]">{{ $product->formatted_price }}</span>
+            </div>
 
             <div class="mt-6 flex space-x-3">
                 <button type="button" onclick="closeModal()"
@@ -181,6 +216,46 @@
 </div>
 
 <script>
+const UPLOAD_URL = '{{ route("customer.cart.upload-temp") }}';
+
+async function uploadFile(file) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const resp = await fetch(UPLOAD_URL, {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: fd
+    });
+    if (!resp.ok) throw new Error('Upload gagal');
+    return (await resp.json()).path;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.field-file-input').forEach(function (input) {
+        input.addEventListener('change', async function () {
+            const file = this.files[0];
+            if (!file) return;
+            const container = this.closest('.mb-4');
+            const hiddenInput = container.querySelector('.file-uploaded-path');
+            const preview = container.querySelector('.file-preview');
+            try {
+                const path = await uploadFile(file);
+                hiddenInput.value = path;
+                preview.querySelector('img').src = '/storage/' + path;
+                preview.classList.remove('hidden');
+            } catch (e) {
+                alert('Gagal mengupload gambar. Silakan coba lagi.');
+                this.value = '';
+            }
+        });
+    });
+});
+
+const BASE_PRICE = {{ $product->price }};
+
 function incrementQty() {
     const input = document.getElementById('cart-quantity');
     const max = parseInt(input.max);
@@ -197,9 +272,84 @@ function decrementQty() {
     }
 }
 
+function getSelectedOptionsPrice() {
+    let total = 0;
+    document.querySelectorAll('#custom-options-form select, #custom-options-form input[type="checkbox"][data-price]').forEach(function(el) {
+        if (el.tagName === 'SELECT' && el.value && el.selectedOptions[0]?.dataset.price) {
+            total += parseInt(el.selectedOptions[0].dataset.price) || 0;
+        }
+        if (el.type === 'checkbox' && el.checked && el.dataset.price) {
+            total += parseInt(el.dataset.price) || 0;
+        }
+    });
+    return total;
+}
+
+function updateTotalPrice() {
+    var optionsPrice = getSelectedOptionsPrice();
+    var unitPrice = BASE_PRICE + optionsPrice;
+    document.getElementById('modal-total-price').textContent = formatRupiah(unitPrice);
+}
+
+document.getElementById('custom-options-form').addEventListener('change', function(e) {
+    if (e.target.matches('select, input[type="checkbox"]')) {
+        updateTotalPrice();
+    }
+});
+
+function getCartQty(productId) {
+    return CartStorage.get()
+        .filter(function(i) { return i.id === productId; })
+        .reduce(function(sum, i) { return sum + i.qty; }, 0);
+}
+
+function updateRemainingStock() {
+    var productId = {{ $product->id }};
+    var stock = {{ $product->stock }};
+    var inCart = getCartQty(productId);
+    var remaining = Math.max(0, stock - inCart);
+
+    var input = document.getElementById('cart-quantity');
+    var addBtn = document.getElementById('btn-add-cart');
+    var info = document.getElementById('stock-info');
+
+    if (input) {
+        input.max = remaining;
+        if (parseInt(input.value) > remaining) {
+            input.value = Math.max(1, remaining || 0);
+        }
+    }
+
+    if (remaining <= 0) {
+        if (addBtn) {
+            addBtn.disabled = true;
+            addBtn.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+            addBtn.textContent = 'Stok Maksimal di Keranjang';
+        }
+        if (info) {
+            info.textContent = 'Stok maksimal di keranjang';
+            info.className = 'text-sm text-[#C9A9B4]';
+        }
+    } else {
+        if (addBtn) {
+            addBtn.disabled = false;
+            addBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+            addBtn.textContent = 'Tambah ke Keranjang';
+        }
+        if (info) {
+            info.textContent = 'Stok: ' + remaining + ' tersedia';
+            info.className = 'text-sm text-[#5C6F5E]';
+        }
+    }
+}
+
+updateRemainingStock();
+window.addEventListener('cart-updated', updateRemainingStock);
+
 function openModal() {
     document.getElementById('custom-options-modal').classList.remove('hidden');
     document.body.classList.add('overflow-hidden');
+    updateTotalPrice();
 }
 
 function closeModal() {
@@ -216,26 +366,97 @@ document.getElementById('custom-options-modal')?.addEventListener('click', funct
     if (e.target === this) closeModal();
 });
 
+function getFieldCustomValue(container) {
+    var select = container.querySelector('select[name^="custom_options["]');
+    if (select) {
+        var selectedOpt = select.selectedOptions[0];
+        if (!selectedOpt || !selectedOpt.value) return null;
+        return {
+            value: selectedOpt.value,
+            option_id: parseInt(selectedOpt.dataset.optionId) || null,
+            price: parseInt(selectedOpt.dataset.price) || 0
+        };
+    }
+
+    var checkboxes = container.querySelectorAll('input[type="checkbox"][name^="custom_options["]');
+    if (checkboxes.length > 0) {
+        var checked = [];
+        checkboxes.forEach(function(cb) {
+            if (cb.checked) {
+                checked.push({
+                    value: cb.value,
+                    option_id: parseInt(cb.dataset.optionId) || null,
+                    price: parseInt(cb.dataset.price) || 0
+                });
+            }
+        });
+        return checked.length > 0 ? checked : null;
+    }
+
+    var textInput = container.querySelector('input[type="text"][name^="custom_options["]');
+    if (textInput) return textInput.value;
+
+    var fileHidden = container.querySelector('.file-uploaded-path');
+    if (fileHidden) return fileHidden.value;
+
+    return null;
+}
+
 function addToCartWithOptions(event) {
     event.preventDefault();
 
-    const form = document.getElementById('custom-options-form');
-    const formData = new FormData(form);
-    const customOptions = {};
-    let isValid = true;
+    var customOptions = {};
+    var isValid = true;
+    var optionsPrice = 0;
 
-    formData.forEach(function(value, key) {
-        const match = key.match(/^custom_options\[(.+?)\]$/);
-        if (match) {
-            const label = match[1];
-            if (customOptions[label]) {
-                if (!Array.isArray(customOptions[label])) {
-                    customOptions[label] = [customOptions[label]];
-                }
-                customOptions[label].push(value);
+    document.querySelectorAll('#custom-options-form > .mb-4').forEach(function(container) {
+        var labelEl = container.querySelector('label.block');
+        if (!labelEl) return;
+        var fieldLabel = labelEl.textContent.replace('*', '').trim();
+
+        var select = container.querySelector('select[name^="custom_options["]');
+        if (select) {
+            var selectedOpt = select.selectedOptions[0];
+            if (selectedOpt && selectedOpt.value) {
+                customOptions[fieldLabel] = {
+                    value: selectedOpt.value,
+                    option_id: parseInt(selectedOpt.dataset.optionId) || null,
+                    price: parseInt(selectedOpt.dataset.price) || 0
+                };
+                optionsPrice += customOptions[fieldLabel].price;
             } else {
-                customOptions[label] = value;
+                customOptions[fieldLabel] = '';
             }
+            return;
+        }
+
+        var checkboxes = container.querySelectorAll('input[type="checkbox"][name^="custom_options["]');
+        if (checkboxes.length > 0) {
+            var checked = [];
+            checkboxes.forEach(function(cb) {
+                if (cb.checked) {
+                    checked.push({
+                        value: cb.value,
+                        option_id: parseInt(cb.dataset.optionId) || null,
+                        price: parseInt(cb.dataset.price) || 0
+                    });
+                    optionsPrice += parseInt(cb.dataset.price) || 0;
+                }
+            });
+            customOptions[fieldLabel] = checked.length > 0 ? checked : [];
+            return;
+        }
+
+        var textInput = container.querySelector('input[type="text"][name^="custom_options["]');
+        if (textInput) {
+            customOptions[fieldLabel] = textInput.value;
+            return;
+        }
+
+        var fileHidden = container.querySelector('.file-uploaded-path');
+        if (fileHidden) {
+            customOptions[fieldLabel] = fileHidden.value;
+            return;
         }
     });
 
@@ -244,9 +465,9 @@ function addToCartWithOptions(event) {
         @foreach($product->productCategory->fields as $field)
             @if($field->type === 'checkbox' && $field->is_required)
                 (function() {
-                    const checks = document.querySelectorAll('input[name="custom_options[{{ $field->label }}][]"]:checked');
+                    var checks = document.querySelectorAll('input[name="custom_options[{{ $field->label }}][]"]:checked');
                     if (checks.length === 0) {
-                        const msg = document.querySelector('#custom-options-form .required-checkbox-msg');
+                        var msg = document.querySelector('#custom-options-form .required-checkbox-msg');
                         if (msg) msg.classList.remove('hidden');
                         isValid = false;
                     }
@@ -257,11 +478,29 @@ function addToCartWithOptions(event) {
 
     if (!isValid) return false;
 
-    const qty = parseInt(document.getElementById('cart-quantity').value);
+    document.querySelectorAll('#custom-options-form .field-file-input[required]').forEach(function (input) {
+        var container = input.closest('.mb-4');
+        var path = container.querySelector('.file-uploaded-path').value;
+        if (!path) {
+            isValid = false;
+            var msg = container.querySelector('.file-error-msg');
+            if (!msg) {
+                msg = document.createElement('p');
+                msg.className = 'file-error-msg text-xs text-[#D37897] mt-1';
+                container.appendChild(msg);
+            }
+            msg.textContent = 'Harap upload gambar.';
+        }
+    });
+
+    if (!isValid) return false;
+
+    var qty = parseInt(document.getElementById('cart-quantity').value);
+    var unitPrice = BASE_PRICE + optionsPrice;
     CartStorage.addItem({
         id:    {{ $product->id }},
         name:  @json($product->name),
-        price: {{ $product->price }},
+        price: unitPrice,
         image: @json($product->primaryImage ? Storage::url($product->primaryImage->image_url) : ''),
         qty:   qty,
         custom_options: Object.keys(customOptions).length > 0 ? customOptions : null
@@ -269,7 +508,7 @@ function addToCartWithOptions(event) {
 
     closeModal();
 
-    const fb = document.getElementById('cart-feedback');
+    var fb = document.getElementById('cart-feedback');
     fb.textContent = 'Ditambahkan ke keranjang!';
     fb.classList.remove('hidden');
     setTimeout(function() { fb.classList.add('hidden'); }, 2500);

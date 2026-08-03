@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\CategoryFieldOption;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -22,12 +23,16 @@ class OrderController extends Controller
         return view('customer.order-create', compact('user', 'minDate'));
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $orders = Order::where('user_id', Auth::id())
             ->with('items')
             ->latest()
             ->paginate(10);
+
+        if ($request->ajax()) {
+            return view('customer.orders-list', compact('orders'));
+        }
 
         return view('customer.orders', compact('orders'));
     }
@@ -82,7 +87,7 @@ class OrderController extends Controller
                     'new_label' => $labels[$log->new_status] ?? $log->new_status,
                     'note' => $log->note,
                     'changed_by' => $log->changedByUser->name ?? 'Sistem',
-                    'created_at' => $log->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') . ' WIB',
+                    'created_at' => $log->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i').' WIB',
                 ];
             })->values(),
         ]);
@@ -103,11 +108,11 @@ class OrderController extends Controller
             if ($previousOrder) {
                 $previousItem = $previousOrder->items->firstWhere('product_id', $product->id);
                 if ($previousItem) {
-                    if (!$product->is_active) {
-                        return back()->with('error', 'Produk "' . $product->name . '" sudah tidak tersedia.');
+                    if (! $product->is_active) {
+                        return back()->with('error', 'Produk "'.$product->name.'" sudah tidak tersedia.');
                     }
                     if ($product->stock <= 0) {
-                        return back()->with('error', 'Produk "' . $product->name . '" sedang habis.');
+                        return back()->with('error', 'Produk "'.$product->name.'" sedang habis.');
                     }
                     $reorderItem = [
                         'quantity' => $previousItem->quantity,
@@ -117,13 +122,13 @@ class OrderController extends Controller
                         'old_price' => $previousItem->price_snapshot,
                     ];
                     if ($previousItem->price_snapshot !== $product->price) {
-                        session()->flash('warning', 'Harga produk "' . $product->name . '" telah berubah dari Rp ' . number_format($previousItem->price_snapshot, 0, ',', '.') . ' menjadi ' . $product->formatted_price . '. Harga terbaru akan digunakan.');
+                        session()->flash('warning', 'Harga produk "'.$product->name.'" telah berubah dari Rp '.number_format($previousItem->price_snapshot, 0, ',', '.').' menjadi '.$product->formatted_price.'. Harga terbaru akan digunakan.');
                     }
                 }
             }
         }
 
-        if (!$product->is_active || $product->stock <= 0) {
+        if (! $product->is_active || $product->stock <= 0) {
             abort(404);
         }
 
@@ -138,7 +143,7 @@ class OrderController extends Controller
             'cart_payload' => ['required', 'string'],
             'orderer_name' => ['required', 'string', 'max:255'],
             'orderer_phone' => ['required', 'string', 'max:20', 'regex:/^08[0-9]{8,11}$/'],
-            'needed_date' => ['required', 'date', 'after:' . now()->addDays($leadDays - 1)->format('Y-m-d')],
+            'needed_date' => ['required', 'date', 'after:'.now()->addDays($leadDays - 1)->format('Y-m-d')],
             'pickup_method' => ['required', 'in:self_pickup,delivery'],
             'delivery_address' => ['required_if:pickup_method,delivery', 'nullable', 'string'],
             'special_note' => ['nullable', 'string', 'max:500'],
@@ -146,11 +151,11 @@ class OrderController extends Controller
         ]);
 
         $cartItems = json_decode($validated['cart_payload'], true);
-        if (!is_array($cartItems) || empty($cartItems)) {
+        if (! is_array($cartItems) || empty($cartItems)) {
             return back()->withInput()->with('error', 'Keranjang belanja kosong atau data tidak valid.');
         }
 
-        $orderCode = 'ORD-' . now()->format('Ymd') . '-' . strtoupper(Str::random(3));
+        $orderCode = 'ORD-'.now()->format('Ymd').'-'.strtoupper(Str::random(3));
         $path = $request->file('payment_proof')->store('payment-proofs', 'public');
 
         DB::beginTransaction();
@@ -161,61 +166,83 @@ class OrderController extends Controller
 
             foreach ($cartItems as $item) {
                 $productId = (int) ($item['id'] ?? 0);
-                $quantity  = (int) ($item['qty'] ?? 0);
+                $quantity = (int) ($item['qty'] ?? 0);
 
                 if ($productId <= 0 || $quantity <= 0) {
                     DB::rollBack();
                     \Storage::disk('public')->delete($path);
+
                     return back()->withInput()->with('error', 'Data item keranjang tidak valid.');
                 }
 
                 $product = Product::lockForUpdate()->find($productId);
 
-                if (!$product || !$product->is_active) {
+                if (! $product || ! $product->is_active) {
                     DB::rollBack();
                     \Storage::disk('public')->delete($path);
-                    return back()->withInput()->with('error', 'Maaf, produk "' . ($item['name'] ?? 'Unknown') . '" sudah tidak tersedia.');
+
+                    return back()->withInput()->with('error', 'Maaf, produk "'.($item['name'] ?? 'Unknown').'" sudah tidak tersedia.');
                 }
 
                 if ($product->stock < $quantity) {
                     DB::rollBack();
                     \Storage::disk('public')->delete($path);
                     $msg = $product->stock > 0
-                        ? 'Maaf, stok buket ' . $product->name . ' baru saja habis! Sisa stok: ' . $product->stock
-                        : 'Maaf, stok buket ' . $product->name . ' baru saja habis!';
+                        ? 'Maaf, stok buket '.$product->name.' baru saja habis! Sisa stok: '.$product->stock
+                        : 'Maaf, stok buket '.$product->name.' baru saja habis!';
+
                     return back()->withInput()->with('error', $msg);
                 }
 
-                $priceSnapshot = $product->price;
+                $optionsPrice = 0;
+                if (! empty($item['custom_options'])) {
+                    $optionIds = [];
+                    foreach ($item['custom_options'] as $label => $value) {
+                        if (is_array($value) && isset($value['option_id'])) {
+                            $optionIds[] = $value['option_id'];
+                        } elseif (is_array($value)) {
+                            foreach ($value as $v) {
+                                if (is_array($v) && isset($v['option_id'])) {
+                                    $optionIds[] = $v['option_id'];
+                                }
+                            }
+                        }
+                    }
+                    if (! empty($optionIds)) {
+                        $optionsPrice = CategoryFieldOption::whereIn('id', $optionIds)->sum('price');
+                    }
+                }
+
+                $priceSnapshot = $product->price + $optionsPrice;
                 $subtotal = $priceSnapshot * $quantity;
                 $totalPrice += $subtotal;
 
-                $customOptions = !empty($item['custom_options']) ? $item['custom_options'] : null;
+                $customOptions = ! empty($item['custom_options']) ? $item['custom_options'] : null;
 
                 $orderItems[] = [
-                    'product_id'            => $productId,
+                    'product_id' => $productId,
                     'product_name_snapshot' => $product->name,
-                    'price_snapshot'        => $priceSnapshot,
-                    'quantity'              => $quantity,
-                    'subtotal'              => $subtotal,
-                    'custom_options'        => $customOptions,
+                    'price_snapshot' => $priceSnapshot,
+                    'quantity' => $quantity,
+                    'subtotal' => $subtotal,
+                    'custom_options' => $customOptions,
                 ];
 
                 $product->decrement('stock', $quantity);
             }
 
             $order = Order::create([
-                'order_code'        => $orderCode,
-                'user_id'           => Auth::id(),
-                'orderer_name'      => $validated['orderer_name'],
-                'orderer_phone'     => $validated['orderer_phone'],
-                'needed_date'       => $validated['needed_date'],
-                'pickup_method'     => $validated['pickup_method'],
-                'delivery_address'  => $validated['pickup_method'] === 'delivery' ? $validated['delivery_address'] : null,
-                'special_note'      => $validated['special_note'] ?? null,
-                'total_price'       => $totalPrice,
+                'order_code' => $orderCode,
+                'user_id' => Auth::id(),
+                'orderer_name' => $validated['orderer_name'],
+                'orderer_phone' => $validated['orderer_phone'],
+                'needed_date' => $validated['needed_date'],
+                'pickup_method' => $validated['pickup_method'],
+                'delivery_address' => $validated['pickup_method'] === 'delivery' ? $validated['delivery_address'] : null,
+                'special_note' => $validated['special_note'] ?? null,
+                'total_price' => $totalPrice,
                 'payment_proof_url' => $path,
-                'status'            => 'menunggu_konfirmasi',
+                'status' => 'menunggu_konfirmasi',
             ]);
 
             foreach ($orderItems as $oi) {
@@ -224,22 +251,62 @@ class OrderController extends Controller
             }
 
             TrackingLog::create([
-                'order_id'       => $order->id,
+                'order_id' => $order->id,
                 'previous_status' => null,
-                'new_status'     => 'menunggu_konfirmasi',
-                'changed_by'     => Auth::id(),
-                'note'           => 'Pesanan dibuat oleh pelanggan.',
+                'new_status' => 'menunggu_konfirmasi',
+                'changed_by' => Auth::id(),
+                'note' => 'Pesanan dibuat oleh pelanggan.',
             ]);
 
             DB::commit();
 
             return redirect()->route('customer.orders.index')
-                ->with('success', 'Pesanan berhasil dibuat! Kode pesanan: ' . $orderCode)
-                ->header('X-Clear-Cart', 'true');
+                ->with('success', 'Pesanan berhasil dibuat! Kode pesanan: '.$orderCode)
+                ->with('clear_cart', true);
         } catch (\Exception $e) {
             DB::rollBack();
             \Storage::disk('public')->delete($path);
-            return back()->withInput()->with('error', 'Gagal membuat pesanan: ' . $e->getMessage());
+
+            return back()->withInput()->with('error', 'Gagal membuat pesanan: '.$e->getMessage());
+        }
+    }
+
+    public function cancel(Order $order)
+    {
+        if ($order->user_id !== Auth::id()) {
+            abort(404);
+        }
+
+        if (! $order->canBeCancelledByCustomer()) {
+            return back()->with('error', 'Pesanan ini tidak dapat dibatalkan lagi.');
+        }
+
+        $previousStatus = $order->status;
+
+        DB::beginTransaction();
+
+        try {
+            $order->update(['status' => 'dibatalkan']);
+
+            foreach ($order->items as $item) {
+                Product::where('id', $item->product_id)->increment('stock', $item->quantity);
+            }
+
+            TrackingLog::create([
+                'order_id' => $order->id,
+                'previous_status' => $previousStatus,
+                'new_status' => 'dibatalkan',
+                'changed_by' => Auth::id(),
+                'note' => 'Pesanan dibatalkan oleh pelanggan.',
+            ]);
+
+            DB::commit();
+
+            return back()->with('success', 'Pesanan '.$order->order_code.' berhasil dibatalkan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return back()->with('error', 'Gagal membatalkan pesanan: '.$e->getMessage());
         }
     }
 }

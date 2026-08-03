@@ -25,6 +25,7 @@ class Order extends Model
         'payment_verified',
         'status',
         'admin_note',
+        'allow_customer_cancel',
     ];
 
     protected function casts(): array
@@ -33,7 +34,21 @@ class Order extends Model
             'needed_date' => 'date',
             'total_price' => 'integer',
             'payment_verified' => 'boolean',
+            'allow_customer_cancel' => 'boolean',
         ];
+    }
+
+    public function canBeCancelledByCustomer(): bool
+    {
+        if ($this->status === 'menunggu_konfirmasi') {
+            return true;
+        }
+
+        if ($this->status === 'dikonfirmasi') {
+            return (bool) $this->allow_customer_cancel;
+        }
+
+        return false;
     }
 
     public function user(): BelongsTo
@@ -53,7 +68,7 @@ class Order extends Model
 
     public function getFormattedTotalAttribute(): string
     {
-        return 'Rp ' . number_format($this->total_price, 0, ',', '.');
+        return 'Rp '.number_format($this->total_price, 0, ',', '.');
     }
 
     public function getStatusLabelAttribute(): string

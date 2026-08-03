@@ -12,12 +12,12 @@
 
 @section('content')
 <div class="max-w-5xl mx-auto">
-    <a href="{{ route('customer.cart') }}"
+    <a href="{{ route('home') }}"
        class="inline-flex items-center gap-2 text-sm tracking-wide text-[#D37897] border-b border-[#D37897] pb-0.5 hover:gap-3 transition-all duration-200 mb-8">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
         </svg>
-        Kembali ke Keranjang
+        Kembali ke Beranda
     </a>
 
     <div class="text-center mb-10">
@@ -183,29 +183,52 @@ async function loadSummary() {
     emptyEl.classList.add('hidden');
     footerEl.classList.remove('hidden');
 
+    function isFilePath(val) {
+        if (typeof val === 'string') return val.startsWith('temp-uploads/');
+        if (val && typeof val === 'object' && val.value && typeof val.value === 'string') return val.value.startsWith('temp-uploads/');
+        return false;
+    }
+
+    function getDisplayValue(val) {
+        if (typeof val === 'string') return val;
+        if (Array.isArray(val)) return val.map(function(v) { return (v && typeof v === 'object') ? v.value : v; }).join(', ');
+        if (val && typeof val === 'object' && val.value) return val.value;
+        return String(val);
+    }
+
+    function getFileUrl(val) {
+        if (typeof val === 'string' && val.startsWith('temp-uploads/')) return val;
+        if (val && typeof val === 'object' && val.value && typeof val.value === 'string' && val.value.startsWith('temp-uploads/')) return val.value;
+        return '';
+    }
+
     function renderSummaryOptions(opts) {
         if (!opts) return '';
         const entries = Object.entries(opts);
         if (entries.length === 0) return '';
         return entries.map(function(kv) {
-            const val = Array.isArray(kv[1]) ? kv[1].join(', ') : kv[1];
+            var val = kv[1];
+            var fileUrl = getFileUrl(val);
             return '<div>' +
                 '<p class="text-[10px] tracking-[0.15em] uppercase text-[#6E8577]">' + kv[0] + '</p>' +
-                '<p class="text-xs text-[#33413A]">' + val + '</p>' +
+                (fileUrl
+                    ? '<a href="/storage/' + fileUrl + '" target="_blank" class="inline-block mt-1"><img src="/storage/' + fileUrl + '" class="w-14 h-14 object-cover border border-[#EFD3DE] hover:opacity-80 transition"></a>'
+                    : '<p class="text-xs text-[#33413A]">' + getDisplayValue(val) + '</p>') +
                 '</div>';
         }).join('');
     }
 
     summaryEl.innerHTML = items.map(function(item) {
+        var safeKey = encodeURIComponent(item._key);
         var hasOpts = item.custom_options && Object.keys(item.custom_options).length > 0;
-        return '<div class="flex items-start gap-3 pb-3 border-b border-[#EFD3DE]/50 last:border-0 last:pb-0" data-summary-key="' + item._key + '">\
+        return '<div class="flex items-start gap-3 pb-3 border-b border-[#EFD3DE]/50 last:border-0 last:pb-0" data-summary-key="' + safeKey + '">\
             <div class="w-10 h-10 flex-shrink-0 overflow-hidden bg-[#F9DEE5]">\
                 ' + (item.image
                     ? '<img src="' + item.image + '" class="w-full h-full object-cover">'
                     : '<div class="w-full h-full flex items-center justify-center text-sm text-[#C9A9B4]">—</div>') + '\
             </div>\
             <div class="flex-1 min-w-0">\
-                <div class="flex items-start gap-1' + (hasOpts ? ' cursor-pointer' : '') + '"' + (hasOpts ? ' onclick="this.nextElementSibling.classList.toggle(\'hidden\');this.querySelector(\'.cv\').classList.toggle(\'-rotate-180\')"' : '') + '>\
+                <div class="flex items-start gap-1' + (hasOpts ? ' cursor-pointer toggle-options' : '') + '">\
                     <div class="min-w-0">\
                         <p class="text-sm text-[#33413A] truncate">' + item.name + '</p>\
                         <p class="text-xs text-[#6E8577]">' + item.qty + ' x ' + formatRupiah(item.price) + '</p>\
@@ -242,7 +265,7 @@ async function loadSummary() {
 
         items.forEach(item => {
             const stock = stockDataMap[item.id];
-            const el = document.querySelector(`[data-summary-key="${item._key}"]`);
+            const el = document.querySelector(`[data-summary-key="${encodeURIComponent(item._key)}"]`);
             if (!el) return;
 
             if (!stock || !stock.is_active || item.qty > stock.stock) {
@@ -283,6 +306,16 @@ async function loadSummary() {
         console.error('Stock check failed:', err);
     }
 }
+
+document.getElementById('summary-items').addEventListener('click', function (e) {
+    const toggle = e.target.closest('.toggle-options');
+    if (!toggle) return;
+    const options = toggle.nextElementSibling;
+    if (options) {
+        options.classList.toggle('hidden');
+        toggle.querySelector('.cv')?.classList.toggle('-rotate-180');
+    }
+});
 
 document.getElementById('checkout-form').addEventListener('submit', function(e) {
     const items = CartStorage.get();

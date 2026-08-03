@@ -30,6 +30,8 @@ Route::get('/catalog/{product}', [CatalogController::class, 'show'])->name('cust
 // Cart Routes (Guest-accessible, localStorage-based)
 Route::get('/cart', [CartController::class, 'index'])->name('customer.cart');
 Route::post('/cart/check-stock', [CartController::class, 'checkStock'])->name('customer.cart.check-stock');
+Route::post('/cart/upload-temp', [CartController::class, 'uploadTemp'])->name('customer.cart.upload-temp');
+Route::get('/cart/edit-fields/{product}', [CartController::class, 'editFields'])->name('customer.cart.edit-fields');
 
 // Checkout Route (requires login)
 Route::get('/orders/create', [OrderController::class, 'checkout'])->middleware('auth')->name('orders.checkout');
@@ -46,6 +48,7 @@ Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer
     Route::get('/orders/{order}/status', [OrderController::class, 'status'])->name('orders.status');
     Route::get('/orders/create/{product}', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::post('/orders/{order}/cancel', [OrderController::class, 'cancel'])->name('orders.cancel');
 });
 
 // Admin Routes
@@ -63,6 +66,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/verify-payment', [AdminOrderController::class, 'verifyPayment'])->name('orders.verify-payment');
     Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus'])->name('orders.update-status');
+    Route::patch('/orders/{order}/cancelable', [AdminOrderController::class, 'toggleCancelable'])->name('orders.cancelable');
     Route::patch('/orders/{order}/note', [AdminOrderController::class, 'updateNote'])->name('orders.update-note');
 
     // Customers

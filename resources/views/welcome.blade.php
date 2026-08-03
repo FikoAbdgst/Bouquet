@@ -33,11 +33,24 @@
 @endpush
 
 @section('content')
+    @php
+        $catFields = ($categories ?? collect())->keyBy('id')->map(function($c) {
+            return $c->fields->map(function($field) {
+                return [
+                    'id' => $field->id,
+                    'label' => $field->label,
+                    'type' => $field->type,
+                    'is_required' => $field->is_required,
+                    'options' => $field->options,
+                    'field_options' => $field->fieldOptions->map(function($o) {
+                        return ['id' => $o->id, 'name' => $o->name, 'price' => $o->price];
+                    })->toArray(),
+                ];
+            });
+        });
+    @endphp
     <script>
-        window.categoryFields = @json(
-            ($categories ?? collect())->keyBy('id')->map(function ($c) {
-                return $c->fields;
-            }));
+        window.categoryFields = @json($catFields);
     </script>
     <div class="font-body text-[#33413A] bg-[#FFFDFC]">
 
@@ -192,7 +205,7 @@
                                         data-price="{{ $product->price }}"
                                         data-image="{{ $product->primaryImage ? Storage::url($product->primaryImage->image_url) : '' }}"
                                         data-catid="{{ $catId ?? '' }}" onclick="openQuickAdd(this)"
-                                        class="mt-4 w-full border border-[#D37897] hover:bg-[#457359] hover:border-[#457359] hover:text-white text-[#33413A] text-sm tracking-wide py-2.5 transition-colors duration-200">
+                                        class="mt-4 w-full border border-[#D37897] hover:bg-[#D37897] hover:border-[#D37897] hover:text-white text-[#33413A] text-sm tracking-wide py-2.5 transition-colors duration-200">
                                         Tambah ke Keranjang
                                     </button>
                                 @else
@@ -369,7 +382,7 @@
                     </div>
 
                     <button type="button" id="order-next-btn"
-                        class="mt-8 inline-flex items-center gap-2 bg-[#D37897] hover:bg-[#457359] text-white text-sm font-medium tracking-wide px-7 py-3 rounded-full transition-colors duration-200">
+                        class="mt-8 inline-flex items-center gap-2 bg-[#D37897] hover:bg-[#C06A85] text-white text-sm font-medium tracking-wide px-7 py-3 rounded-full transition-colors duration-200">
                         Lanjut ke Langkah Berikutnya
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
@@ -538,13 +551,18 @@
             <form id="quick-add-form" onsubmit="return submitQuickAdd(event)">
                 <div id="quick-add-fields"></div>
 
+                <div id="quick-add-price-summary" class="flex justify-between items-center py-3 px-4 bg-[#F9DEE5] mt-4 hidden">
+                    <span class="text-sm text-[#33413A] font-medium">Total Harga</span>
+                    <span id="quick-add-total-price" class="text-lg font-medium text-[#D37897]"></span>
+                </div>
+
                 <div class="mt-6 flex space-x-3">
                     <button type="button" onclick="closeQuickAdd()"
                         class="flex-1 px-4 py-3 border border-[#EFD3DE] text-[#6E8577] hover:border-[#D37897] hover:text-[#33413A] text-sm tracking-wide transition-colors duration-200">
                         Batal
                     </button>
                     <button type="submit"
-                        class="flex-1 px-4 py-3 bg-[#D37897] text-white hover:bg-[#457359] text-sm tracking-wide transition-colors duration-200">
+                        class="flex-1 px-4 py-3 bg-[#D37897] text-white hover:bg-[#C06A85] text-sm tracking-wide transition-colors duration-200">
                         Tambah ke Keranjang
                     </button>
                 </div>
@@ -681,11 +699,25 @@
 
         var quickAddProduct = null;
 
+        function escapeHtml(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function getFieldOptions(field) {
+            if (field.field_options && field.field_options.length > 0) {
+                return field.field_options;
+            }
+            return (field.options || '').split(',').map(function(o) {
+                return { name: o.trim(), price: 0 };
+            }).filter(function(o) { return o.name; });
+        }
+
         function openQuickAdd(btn) {
             quickAddProduct = {
-                id: btn.getAttribute('data-pid'),
+                id: parseInt(btn.getAttribute('data-pid')) || 0,
                 name: btn.getAttribute('data-name'),
-                price: btn.getAttribute('data-price'),
+                price: parseInt(btn.getAttribute('data-price')) || 0,
                 image: btn.getAttribute('data-image'),
                 catId: btn.getAttribute('data-catid') || null,
             };
@@ -696,47 +728,56 @@
             container.innerHTML = '';
 
             var fields = quickAddProduct.catId ? (window.categoryFields[quickAddProduct.catId] || []) : [];
+            var summary = document.getElementById('quick-add-price-summary');
             if (fields.length === 0) {
                 container.innerHTML =
                     '<p class="text-sm text-[#6E8577]">Tidak ada opsi kustomisasi. Produk akan langsung ditambahkan.</p>';
+                summary.classList.add('hidden');
             } else {
+                summary.classList.remove('hidden');
                 fields.forEach(function(field) {
                     var reqAttr = field.is_required ? 'required' : '';
                     var reqStar = field.is_required ? ' <span class="text-[#D37897]">*</span>' : '';
                     var html = '<div class="mb-4">';
                     html += '<label class="block text-[11px] tracking-[0.15em] uppercase text-[#6E8577] mb-2">' +
-                        field.label + reqStar + '</label>';
+                        escapeHtml(field.label) + reqStar + '</label>';
 
                     if (field.type === 'text') {
                         html += '<input type="text" name="custom_options[' + field.label + ']" ' + reqAttr +
                             ' class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent placeholder-[#C9A9B4] outline-none transition-colors" placeholder="' +
-                            field.label + '">';
+                            escapeHtml(field.label) + '">';
                     } else if (field.type === 'select') {
-                        var opts = (field.options || '').split(',').map(function(o) {
-                            return o.trim();
-                        }).filter(Boolean);
+                        var opts = getFieldOptions(field);
                         html += '<select name="custom_options[' + field.label + ']" ' + reqAttr +
-                            ' class="block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent outline-none transition-colors">';
-                        html += '<option value="">Pilih ' + field.label + '</option>';
+                            ' class="quick-add-select block w-full border-0 border-b border-[#EFD3DE] focus:border-[#D37897] focus:ring-0 px-0 py-2 text-sm bg-transparent outline-none transition-colors">';
+                        html += '<option value="">Pilih ' + escapeHtml(field.label) + '</option>';
                         opts.forEach(function(o) {
-                            html += '<option value="' + o + '">' + o + '</option>';
+                            html += '<option value="' + escapeHtml(o.name || o) + '" data-option-id="' + (o.id || '') +
+                                '" data-price="' + (o.price || 0) + '">' + escapeHtml(o.name || o);
+                            if (o.price > 0) html += ' (+Rp ' + o.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ')';
+                            html += '</option>';
                         });
                         html += '</select>';
                     } else if (field.type === 'checkbox') {
-                        var opts = (field.options || '').split(',').map(function(o) {
-                            return o.trim();
-                        }).filter(Boolean);
+                        var opts = getFieldOptions(field);
                         html += '<div class="space-y-2">';
                         opts.forEach(function(o) {
                             html +=
                                 '<label class="flex items-center space-x-3 p-2.5 border border-[#EFD3DE] cursor-pointer hover:bg-[#F9DEE5] transition">';
                             html += '<input type="checkbox" name="custom_options[' + field.label +
-                                '][]" value="' + o +
-                                '" class="text-[#D37897] focus:ring-[#D37897] rounded">';
-                            html += '<span class="text-sm text-[#33413A]">' + o + '</span>';
-                            html += '</label>';
+                                '][]" value="' + escapeHtml(o.name || o) + '" data-option-id="' + (o.id || '') +
+                                '" data-price="' + (o.price || 0) +
+                                '" class="quick-add-checkbox text-[#D37897] focus:ring-[#D37897] rounded">';
+                            html += '<span class="text-sm text-[#33413A]">' + escapeHtml(o.name || o);
+                            if (o.price > 0) html += ' <span class="text-[#D37897]">(+Rp ' + o.price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ')</span>';
+                            html += '</span></label>';
                         });
                         html += '</div>';
+                    } else if (field.type === 'file') {
+                        html += '<input type="file" accept="image/jpg,image/jpeg,image/png,image/webp" data-label="' + escapeHtml(field.label) + '" data-required="' + field.is_required + '" class="field-file-input block w-full text-sm text-[#33413A] file:border file:border-[#EFD3DE] file:px-4 file:py-2 file:text-sm file:tracking-wide file:bg-transparent file:text-[#33413A] hover:file:bg-[#F9DEE5] file:transition-colors file:cursor-pointer file:mr-4 transition-colors"' + (field.is_required ? ' required' : '') + '>';
+                        html += '<input type="hidden" name="custom_options[' + field.label + ']" value="" class="file-uploaded-path">';
+                        html += '<div class="file-preview mt-2 hidden"><div class="flex items-center gap-2"><img src="" class="w-14 h-14 object-cover border border-[#EFD3DE]"><span class="text-xs text-[#5C6F5E]">Terupload</span></div></div>';
+                        html += '<p class="text-xs text-[#C9A9B4] mt-1">Upload gambar referensi (jpg/png/webp, maks 5MB)</p>';
                     }
 
                     html += '</div>';
@@ -746,7 +787,69 @@
 
             document.getElementById('quick-add-modal').classList.remove('hidden');
             document.body.classList.add('overflow-hidden');
+            updateQuickAddPrice();
         }
+
+        function getQuickAddOptionsPrice() {
+            var total = 0;
+            document.querySelectorAll('#quick-add-fields .quick-add-select').forEach(function(sel) {
+                if (sel.value && sel.selectedOptions[0]?.dataset?.price) {
+                    total += parseInt(sel.selectedOptions[0].dataset.price) || 0;
+                }
+            });
+            document.querySelectorAll('#quick-add-fields .quick-add-checkbox:checked').forEach(function(cb) {
+                total += parseInt(cb.dataset.price) || 0;
+            });
+            return total;
+        }
+
+        function updateQuickAddPrice() {
+            if (!quickAddProduct) return;
+            var total = quickAddProduct.price + getQuickAddOptionsPrice();
+            document.getElementById('quick-add-total-price').textContent = formatRupiah(total);
+        }
+
+        document.getElementById('quick-add-fields').addEventListener('change', function(e) {
+            if (e.target.matches('.quick-add-select, .quick-add-checkbox')) {
+                updateQuickAddPrice();
+            }
+        });
+
+        const UPLOAD_URL = '{{ route('customer.cart.upload-temp') }}';
+
+        async function uploadFile(file) {
+            const fd = new FormData();
+            fd.append('file', file);
+            const resp = await fetch(UPLOAD_URL, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: fd
+            });
+            if (!resp.ok) throw new Error('Upload gagal');
+            return (await resp.json()).path;
+        }
+
+        document.getElementById('quick-add-fields').addEventListener('change', async function(e) {
+            var input = e.target.closest('.field-file-input');
+            if (!input) return;
+            var file = input.files[0];
+            if (!file) return;
+            var container = input.closest('.mb-4');
+            var hiddenInput = container.querySelector('.file-uploaded-path');
+            var preview = container.querySelector('.file-preview');
+            try {
+                var path = await uploadFile(file);
+                hiddenInput.value = path;
+                preview.querySelector('img').src = '/storage/' + path;
+                preview.classList.remove('hidden');
+            } catch (err) {
+                alert('Gagal mengupload gambar. Silakan coba lagi.');
+                input.value = '';
+            }
+        });
 
         function closeQuickAdd() {
             document.getElementById('quick-add-modal').classList.add('hidden');
@@ -758,33 +861,86 @@
             if (e.target === this) closeQuickAdd();
         });
 
+        function buildStructuredCustomOptions() {
+            var customOptions = {};
+            document.querySelectorAll('#quick-add-fields .mb-4').forEach(function(container) {
+                var labelEl = container.querySelector('label.block');
+                if (!labelEl) return;
+                var fieldLabel = labelEl.textContent.replace('*', '').trim();
+
+                var select = container.querySelector('select.quick-add-select');
+                if (select) {
+                    var opt = select.selectedOptions[0];
+                    if (opt && opt.value) {
+                        customOptions[fieldLabel] = {
+                            value: opt.value,
+                            option_id: parseInt(opt.dataset.optionId) || null,
+                            price: parseInt(opt.dataset.price) || 0
+                        };
+                    } else {
+                        customOptions[fieldLabel] = '';
+                    }
+                    return;
+                }
+
+                var checkboxes = container.querySelectorAll('input.quick-add-checkbox');
+                if (checkboxes.length > 0) {
+                    var checked = [];
+                    checkboxes.forEach(function(cb) {
+                        if (cb.checked) {
+                            checked.push({
+                                value: cb.value,
+                                option_id: parseInt(cb.dataset.optionId) || null,
+                                price: parseInt(cb.dataset.price) || 0
+                            });
+                        }
+                    });
+                    customOptions[fieldLabel] = checked.length > 0 ? checked : [];
+                    return;
+                }
+
+                var textInput = container.querySelector('input[type="text"]');
+                if (textInput) {
+                    customOptions[fieldLabel] = textInput.value;
+                    return;
+                }
+
+                var fileHidden = container.querySelector('.file-uploaded-path');
+                if (fileHidden) {
+                    customOptions[fieldLabel] = fileHidden.value;
+                }
+            });
+            return customOptions;
+        }
+
         function submitQuickAdd(event) {
             event.preventDefault();
             if (!quickAddProduct) return false;
 
-            var form = document.getElementById('quick-add-form');
-            var formData = new FormData(form);
-            var customOptions = {};
-
-            formData.forEach(function(value, key) {
-                var match = key.match(/^custom_options\[(.+?)\]$/);
-                if (match) {
-                    var label = match[1];
-                    if (customOptions[label]) {
-                        if (!Array.isArray(customOptions[label])) {
-                            customOptions[label] = [customOptions[label]];
-                        }
-                        customOptions[label].push(value);
-                    } else {
-                        customOptions[label] = value;
+            var isValid = true;
+            document.querySelectorAll('#quick-add-fields .field-file-input[required]').forEach(function(input) {
+                var container = input.closest('.mb-4');
+                var path = container.querySelector('.file-uploaded-path').value;
+                if (!path) {
+                    isValid = false;
+                    var msg = container.querySelector('.file-error-msg');
+                    if (!msg) {
+                        msg = document.createElement('p');
+                        msg.className = 'file-error-msg text-xs text-[#D37897] mt-1';
+                        container.appendChild(msg);
                     }
+                    msg.textContent = 'Harap upload gambar.';
                 }
             });
+            if (!isValid) return false;
+
+            var customOptions = buildStructuredCustomOptions();
+            var unitPrice = quickAddProduct.price + getQuickAddOptionsPrice();
 
             CartStorage.addItem({
-                id: parseInt(quickAddProduct.id),
+                id: quickAddProduct.id,
                 name: quickAddProduct.name,
-                price: parseInt(quickAddProduct.price),
+                price: unitPrice,
                 image: quickAddProduct.image,
                 qty: 1,
                 custom_options: Object.keys(customOptions).length > 0 ? customOptions : null
